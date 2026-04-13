@@ -8,6 +8,7 @@ import {
   HeartOff, Scale, HeartHandshake, ChevronRight,
   RefreshCw, RotateCcw, Monitor, Users, ExternalLink,
   MessageSquareWarning, Send, Timer, PlayCircle, Pause, LogIn,
+  Square, DoorOpen, QrCode,
 } from "lucide-react";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { PulsatingButton } from "@/components/ui/pulsating-button";
@@ -18,6 +19,7 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { Confetti } from "@/components/ui/confetti";
 import { motion } from "framer-motion";
+import { QRCodeSVG } from "qrcode.react";
 
 type Vote = "erode" | "depends" | "support";
 type Room = {
@@ -131,21 +133,33 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <div className="flex items-center justify-between border-b border-zinc-800/50 px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between border-b border-zinc-800/50 px-3 py-2 sm:px-4 sm:py-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button onClick={() => { sessionStorage.removeItem(`player-${code}`); router.push("/"); }}
+            className="text-zinc-600 hover:text-zinc-400" title="Leave game">
+            <DoorOpen className="h-3.5 w-3.5" />
+          </button>
           <span className="text-xs font-bold tracking-widest text-violet-400">{room.code}</span>
-          <div className="flex items-center gap-2 text-xs text-zinc-500"><Users className="h-3 w-3" /> {players.length}</div>
-          <div className="flex items-center gap-2 rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-500">
-            <Layers className="h-3 w-3" /> Round {room.currentRound} of {room.totalRounds}
+          <div className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex"><Users className="h-3 w-3" /> {players.length}</div>
+          <div className="flex items-center gap-1.5 rounded-full border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-500 sm:gap-2 sm:px-3 sm:py-1 sm:text-xs">
+            <Layers className="h-3 w-3" /> {room.currentRound}/{room.totalRounds}
           </div>
         </div>
         <GameTimer room={room} isFacilitator={isFacilitator} act={act} />
-        {isFacilitator ? (
-          <button onClick={() => window.open(`/room/${code}/board`, "_blank")}
-            className="flex items-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500">
-            <Monitor className="h-3 w-3" /> Projector <ExternalLink className="h-2.5 w-2.5 opacity-60" />
-          </button>
-        ) : <div className="w-20" />}
+        <div className="flex items-center gap-2">
+          {isFacilitator && (
+            <>
+              <button onClick={() => { if (confirm("End game early and show summary?")) act({ type: "end-game" }); }}
+                className="flex items-center gap-1 rounded-full border border-red-900/50 px-2.5 py-1.5 text-[10px] font-semibold text-red-400 hover:bg-red-950/30 sm:text-xs">
+                <Square className="h-2.5 w-2.5" /> End
+              </button>
+              <button onClick={() => window.open(`/room/${code}/board`, "_blank")}
+                className="hidden items-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500 sm:flex">
+                <Monitor className="h-3 w-3" /> Projector <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-8">
@@ -253,32 +267,56 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
 // --- LOBBY ---
 function LobbyView({ room, isFacilitator, players, onStart }: { room: Room; isFacilitator: boolean; players: Room["players"][string][]; onStart: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const joinUrl = typeof window !== "undefined" ? `${window.location.origin}/room/${room.code}` : "";
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6">
-      <div className="mb-4 flex items-center gap-1.5 text-xs text-zinc-500"><Share2 className="h-3 w-3" /> Share this code to join</div>
-      <div className="relative flex items-center gap-3 rounded-2xl bg-zinc-900 px-8 py-4">
-        <ShineBorder shineColor={["#7c3aed", "#06b6d4", "#22c55e", "#eab308", "#ef4444"]} borderWidth={2} />
-        <span className="text-4xl font-black tracking-[0.4em] text-zinc-50">{room.code}</span>
-        <button onClick={() => { navigator.clipboard.writeText(room.code); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="text-zinc-500 hover:text-zinc-300">
-          {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
-        </button>
+      <div className="mb-4 flex items-center gap-1.5 text-xs text-zinc-500"><Share2 className="h-3 w-3" /> Share this code or scan QR to join</div>
+
+      {/* Room code + QR toggle */}
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative flex items-center gap-3 rounded-2xl bg-zinc-900 px-6 py-4 sm:px-8">
+          <ShineBorder shineColor={["#7c3aed", "#06b6d4", "#22c55e", "#eab308", "#ef4444"]} borderWidth={2} />
+          <span className="text-3xl font-black tracking-[0.4em] text-zinc-50 sm:text-4xl">{room.code}</span>
+          <div className="flex gap-1.5">
+            <button onClick={() => { navigator.clipboard.writeText(joinUrl || room.code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+              className="text-zinc-500 hover:text-zinc-300" title="Copy link">
+              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            </button>
+            <button onClick={() => setShowQr(!showQr)} className="text-zinc-500 hover:text-zinc-300" title="Show QR code">
+              <QrCode className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* QR Code */}
+        {showQr && joinUrl && (
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl bg-white p-4">
+            <QRCodeSVG value={joinUrl} size={180} level="M" />
+          </motion.div>
+        )}
       </div>
-      <div className="mt-8 flex flex-wrap justify-center gap-2">
+
+      {/* Player list */}
+      <div className="mt-6 flex flex-wrap justify-center gap-2 sm:mt-8">
         {players.map((p) => (
-          <div key={p.id} className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm">
+          <div key={p.id} className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
             {p.isFacilitator ? <Crown className="h-3.5 w-3.5 text-yellow-500" /> : <User className="h-3.5 w-3.5 text-zinc-600" />}
             <span className="text-zinc-300">{p.name}</span>
           </div>
         ))}
       </div>
+
       {isFacilitator ? (
-        <div className="mt-8">
+        <div className="mt-6 sm:mt-8">
           <PulsatingButton className="bg-violet-600 text-sm font-bold text-white" pulseColor="#7c3aed" onClick={onStart}>
             <Play className="mr-2 h-4 w-4" /> Start Game — {players.length} player{players.length !== 1 ? "s" : ""}
           </PulsatingButton>
         </div>
-      ) : <p className="mt-8 animate-pulse text-sm text-zinc-500">Waiting for facilitator to start...</p>}
+      ) : <p className="mt-6 animate-pulse text-sm text-zinc-500 sm:mt-8">Waiting for facilitator to start...</p>}
     </div>
   );
 }
@@ -360,8 +398,8 @@ function ReasonView({ scenario, room, playerId, playerName, isFacilitator, onSub
   const total = Object.keys(room.players).length;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-full max-w-md flex-col items-center">
-      <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-center text-xs text-zinc-400">{scenario}</div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-full max-w-md flex-col items-center px-2">
+      <div className="mb-4 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-center text-xs text-zinc-400 sm:mb-6">{scenario}</div>
       {!submitted ? (
         <>
           <h3 className="text-lg font-bold">Why did you choose that?</h3>
@@ -482,10 +520,15 @@ function SummaryView({ room, onReset }: { room: Room; onReset: () => void }) {
   const totals = { erode: 0, depends: 0, support: 0 };
   allRounds.forEach((r) => Object.values(r.votes).forEach((v) => totals[v]++));
   const total = totals.erode + totals.depends + totals.support;
+  const confettiFired = useRef(false);
+
+  useEffect(() => {
+    confettiFired.current = true;
+  }, []);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6">
-      <Confetti />
+      {!confettiFired.current && <Confetti />}
       <BlurFade delay={0}><h2 className="text-3xl font-black">Game Complete!</h2></BlurFade>
       <BlurFade delay={0.2}><p className="mt-2 text-zinc-500">{allRounds.length} rounds played</p></BlurFade>
       <BlurFade delay={0.4}>

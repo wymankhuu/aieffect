@@ -87,12 +87,18 @@ export async function joinRoom(code: string, player: Player): Promise<boolean> {
 export async function removePlayer(code: string, playerId: string) {
   const room = await getRoom(code);
   if (!room) return;
+  const wasFacilitator = room.players[playerId]?.isFacilitator;
   delete room.players[playerId];
-  if (Object.keys(room.players).length === 0) {
+  const remaining = Object.values(room.players);
+  if (remaining.length === 0) {
     await redis.del(key(code));
-  } else {
-    await saveRoom(room);
+    return;
   }
+  // Auto-promote oldest player if facilitator left
+  if (wasFacilitator && !remaining.some((p) => p.isFacilitator)) {
+    remaining[0].isFacilitator = true;
+  }
+  await saveRoom(room);
 }
 
 export async function act(code: string, playerId: string, action: { type: string; [k: string]: any }): Promise<string | null> {
@@ -160,6 +166,24 @@ export async function act(code: string, playerId: string, action: { type: string
       room.phase = "draw";
       break;
     }
+    case "end-game": {
+      if (!player.isFacilitator) return "Not facilitator";
+      // Save current round if mid-game
+      if (room.currentCardIndex !== null && Object.keys(room.votes).length > 0) {
+        room.roundHistory.push({
+          cardIndex: room.currentCardIndex,
+          votes: { ...room.votes },
+          reasons: { ...room.reasons },
+          revisedVotes: { ...room.revisedVotes },
+        });
+      }
+      room.votes = {};
+      room.reasons = {};
+      room.revisedVotes = {};
+      room.timerStartedAt = null;
+      room.phase = "summary";
+      break;
+    }
     default:
       return "Unknown action";
   }
@@ -169,8 +193,12 @@ export async function act(code: string, playerId: string, action: { type: string
 }
 
 function drawCard(room: Room) {
-  const available = scenarios.map((_, i) => i).filter((i) => !room.cardsPlayed.includes(i));
-  if (available.length === 0) return;
+  let available = scenarios.map((_, i) => i).filter((i) => !room.cardsPlayed.includes(i));
+  // Recycle deck if all cards have been played
+  if (available.length === 0) {
+    room.cardsPlayed = [];
+    available = scenarios.map((_, i) => i);
+  }
   const idx = available[Math.floor(Math.random() * available.length)];
   room.currentCardIndex = idx;
   room.cardsPlayed.push(idx);
