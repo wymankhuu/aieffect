@@ -29,6 +29,9 @@ export type Room = {
   players: Record<string, Player>;
   timerSeconds: number;
   timerStartedAt: number | null;
+  isPaused: boolean;
+  pausedTimeLeft: number | null;
+  autoAdvance: boolean;
   votes: Record<string, Vote>;
   reasons: Record<string, { text: string; name: string }>;
   revisedVotes: Record<string, Vote>;
@@ -67,6 +70,9 @@ export async function createRoom(code: string, facilitator: Player, totalRounds:
     players: { [facilitator.id]: facilitator },
     timerSeconds: 0,
     timerStartedAt: null,
+    isPaused: false,
+    pausedTimeLeft: null,
+    autoAdvance: false,
     votes: {},
     reasons: {},
     revisedVotes: {},
@@ -101,11 +107,36 @@ export async function removePlayer(code: string, playerId: string) {
   await saveRoom(room);
 }
 
+const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
+  draw: "vote",
+  vote: "reason",
+  reason: "reveal",
+};
+
+export async function checkAutoAdvance(code: string): Promise<void> {
+  const room = await getRoom(code);
+  if (!room || !room.autoAdvance || room.isPaused) return;
+  if (!room.timerStartedAt || !room.timerSeconds) return;
+  const elapsed = Math.floor((Date.now() - room.timerStartedAt) / 1000);
+  if (elapsed < room.timerSeconds) return;
+  const nextPhase = NEXT_PHASE[room.phase as Phase];
+  if (!nextPhase) return;
+  room.phase = nextPhase;
+  room.timerStartedAt = null;
+  await saveRoom(room);
+}
+
 export async function act(code: string, playerId: string, action: { type: string; [k: string]: any }): Promise<string | null> {
   const room = await getRoom(code);
   if (!room) return "Room not found";
   const player = room.players[playerId];
   if (!player) return "Not in room";
+
+  // Block all actions while paused except pause/resume/end-game/kick
+  const pauseExempt = ["pause", "resume", "end-game", "kick"];
+  if (room.isPaused && !pauseExempt.includes(action.type)) {
+    return "Game is paused";
+  }
 
   switch (action.type) {
     case "start": {
@@ -182,6 +213,51 @@ export async function act(code: string, playerId: string, action: { type: string
       room.revisedVotes = {};
       room.timerStartedAt = null;
       room.phase = "summary";
+      break;
+    }
+    case "pause": {
+      if (!player.isFacilitator) return "Not facilitator";
+      if (room.isPaused) return "Already paused";
+      room.isPaused = true;
+      if (room.timerStartedAt !== null) {
+        const elapsed = Math.floor((Date.now() - room.timerStartedAt) / 1000);
+        room.pausedTimeLeft = Math.max(0, room.timerSeconds - elapsed);
+        room.timerStartedAt = null;
+      }
+      break;
+    }
+    case "resume": {
+      if (!player.isFacilitator) return "Not facilitator";
+      if (!room.isPaused) return "Not paused";
+      room.isPaused = false;
+      if (room.pausedTimeLeft !== null) {
+        room.timerSeconds = room.pausedTimeLeft;
+        room.timerStartedAt = Date.now();
+        room.pausedTimeLeft = null;
+      }
+      break;
+    }
+    case "skip-scenario": {
+      if (!player.isFacilitator) return "Not facilitator";
+      if (room.phase !== "draw") return "Can only skip during draw phase";
+      drawCard(room);
+      room.timerStartedAt = null;
+      break;
+    }
+    case "kick": {
+      if (!player.isFacilitator) return "Not facilitator";
+      const targetId = action.targetId;
+      if (!targetId || !room.players[targetId]) return "Player not found";
+      if (room.players[targetId].isFacilitator) return "Cannot kick facilitator";
+      delete room.players[targetId];
+      delete room.votes[targetId];
+      delete room.reasons[targetId];
+      delete room.revisedVotes[targetId];
+      break;
+    }
+    case "toggle-auto-advance": {
+      if (!player.isFacilitator) return "Not facilitator";
+      room.autoAdvance = !room.autoAdvance;
       break;
     }
     default:

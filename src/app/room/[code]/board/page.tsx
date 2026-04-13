@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import scenarios from "@/data/scenarios.json";
 import {
   HeartOff, Scale, HeartHandshake, User, Timer,
-  Users, Layers, MessageSquareWarning,
+  Users, Layers, MessageSquareWarning, Pause,
 } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { MagicCard } from "@/components/ui/magic-card";
@@ -22,6 +22,9 @@ type Room = {
   players: Record<string, { id: string; name: string; isFacilitator: boolean }>;
   timerSeconds: number;
   timerStartedAt: number | null;
+  isPaused: boolean;
+  pausedTimeLeft: number | null;
+  autoAdvance: boolean;
   votes: Record<string, Vote>;
   reasons: Record<string, { text: string; name: string }>;
   revisedVotes: Record<string, Vote>;
@@ -80,7 +83,15 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
   const showBoard = room.phase === "reveal" || room.phase === "reflect";
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#09090b] text-zinc-50">
+    <div className="relative flex min-h-dvh flex-col bg-[#09090b] text-zinc-50">
+      {room.isPaused && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Pause className="h-16 w-16 text-violet-400" />
+            <p className="text-4xl font-black text-zinc-200">Game Paused</p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-800/50 px-8 py-4">
         <div className="flex items-center gap-4">
@@ -290,6 +301,18 @@ function BoardTimer({ room }: { room: Room }) {
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [room.timerStartedAt, room.timerSeconds]);
+
+  // Show frozen time when paused
+  if (room.isPaused && room.pausedTimeLeft !== null) {
+    const pMins = Math.floor(room.pausedTimeLeft / 60);
+    const pSecs = room.pausedTimeLeft % 60;
+    return (
+      <div className="flex items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-lg font-black tabular-nums text-zinc-500">
+        <Pause className="h-4 w-4" />
+        {pMins}:{pSecs.toString().padStart(2, "0")}
+      </div>
+    );
+  }
 
   if (timeLeft === null) return null;
   const mins = Math.floor(timeLeft / 60);

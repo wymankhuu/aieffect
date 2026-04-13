@@ -8,7 +8,7 @@ import {
   HeartOff, Scale, HeartHandshake, ChevronRight,
   RefreshCw, RotateCcw, Monitor, Users, ExternalLink,
   MessageSquareWarning, Send, Timer, PlayCircle, Pause, LogIn,
-  Square, DoorOpen, QrCode,
+  Square, DoorOpen, QrCode, X, Zap, Download,
 } from "lucide-react";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { PulsatingButton } from "@/components/ui/pulsating-button";
@@ -31,6 +31,9 @@ type Room = {
   players: Record<string, { id: string; name: string; isFacilitator: boolean }>;
   timerSeconds: number;
   timerStartedAt: number | null;
+  isPaused: boolean;
+  pausedTimeLeft: number | null;
+  autoAdvance: boolean;
   votes: Record<string, Vote>;
   reasons: Record<string, { text: string; name: string }>;
   revisedVotes: Record<string, Vote>;
@@ -128,11 +131,25 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   const players = Object.values(room.players);
   const scenario = room.currentCardIndex !== null ? scenarios[room.currentCardIndex] : null;
 
-  if (room.phase === "lobby") return <LobbyView room={room} isFacilitator={isFacilitator} players={players} onStart={() => act({ type: "start" })} />;
+  if (room.phase === "lobby") return <LobbyView room={room} isFacilitator={isFacilitator} players={players} onStart={() => act({ type: "start" })} onKick={(id) => act({ type: "kick", targetId: id })} />;
   if (room.phase === "summary") return <SummaryView room={room} onReset={() => router.push("/")} />;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="relative flex min-h-dvh flex-col">
+      {room.isPaused && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            <Pause className="h-10 w-10 text-violet-400" />
+            <p className="text-xl font-bold text-zinc-200">Game Paused</p>
+            {isFacilitator && (
+              <button onClick={() => act({ type: "resume" })}
+                className="mt-2 rounded-full bg-violet-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-violet-500">
+                Resume Game
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-zinc-800/50 px-3 py-2 sm:px-4 sm:py-3">
         <div className="flex items-center gap-2 sm:gap-3">
           <button onClick={() => { sessionStorage.removeItem(`player-${code}`); router.push("/"); }}
@@ -140,7 +157,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
             <DoorOpen className="h-3.5 w-3.5" />
           </button>
           <span className="text-xs font-bold tracking-widest text-violet-400">{room.code}</span>
-          <div className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex"><Users className="h-3 w-3" /> {players.length}</div>
+          <PlayerCount players={players} isFacilitator={isFacilitator} onKick={(id) => act({ type: "kick", targetId: id })} />
           <div className="flex items-center gap-1.5 rounded-full border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-500 sm:gap-2 sm:px-3 sm:py-1 sm:text-xs">
             <Layers className="h-3 w-3" /> {room.currentRound}/{room.totalRounds}
           </div>
@@ -149,6 +166,11 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
         <div className="flex items-center gap-2">
           {isFacilitator && (
             <>
+              <button onClick={() => act({ type: room.isPaused ? "resume" : "pause" })}
+                className="flex items-center gap-1 rounded-full border border-zinc-700 px-2.5 py-1.5 text-[10px] font-semibold text-zinc-300 hover:bg-zinc-800 sm:text-xs">
+                {room.isPaused ? <Play className="h-2.5 w-2.5" /> : <Pause className="h-2.5 w-2.5" />}
+                {room.isPaused ? "Resume" : "Pause"}
+              </button>
               <button onClick={() => { if (confirm("End game early and show summary?")) act({ type: "end-game" }); }}
                 className="flex items-center gap-1 rounded-full border border-red-900/50 px-2.5 py-1.5 text-[10px] font-semibold text-red-400 hover:bg-red-950/30 sm:text-xs">
                 <Square className="h-2.5 w-2.5" /> End
@@ -163,11 +185,43 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-8">
-        {room.phase === "draw" && scenario && <DrawView scenario={scenario.text} isFacilitator={isFacilitator} onAdvance={() => act({ type: "advance", phase: "vote" })} />}
+        {room.phase === "draw" && scenario && <DrawView scenario={scenario.text} isFacilitator={isFacilitator} onAdvance={() => act({ type: "advance", phase: "vote" })} onSkip={() => act({ type: "skip-scenario" })} />}
         {room.phase === "vote" && scenario && <VoteView scenario={scenario.text} room={room} playerId={playerId} isFacilitator={isFacilitator} onVote={(v) => act({ type: "vote", vote: v })} onAdvance={() => act({ type: "advance", phase: "reason" })} />}
         {room.phase === "reason" && scenario && <ReasonView scenario={scenario.text} room={room} playerId={playerId} playerName={me?.name || "Player"} isFacilitator={isFacilitator} onSubmit={(text, name) => act({ type: "reason", text, name })} onAdvance={() => act({ type: "advance", phase: "reveal" })} />}
-        {(room.phase === "reveal" || room.phase === "reflect") && <RevealView room={room} playerId={playerId} isFacilitator={isFacilitator} onReflect={() => act({ type: "advance", phase: "reflect" })} onRevote={(v) => act({ type: "revote", vote: v })} onNext={() => act({ type: "next-round" })} />}
+        {(room.phase === "reveal" || room.phase === "reflect") && <RevealView room={room} playerId={playerId} isFacilitator={isFacilitator} scenario={scenario} onReflect={() => act({ type: "advance", phase: "reflect" })} onRevote={(v) => act({ type: "revote", vote: v })} onNext={() => act({ type: "next-round" })} />}
       </div>
+    </div>
+  );
+}
+
+// --- PLAYER COUNT (with kick) ---
+function PlayerCount({ players, isFacilitator, onKick }: { players: Room["players"][string][]; isFacilitator: boolean; onKick: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  if (!isFacilitator) {
+    return <div className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex"><Users className="h-3 w-3" /> {players.length}</div>;
+  }
+  return (
+    <div className="relative hidden sm:block">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300">
+        <Users className="h-3 w-3" /> {players.length}
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 z-50 mt-2 w-48 rounded-xl border border-zinc-800 bg-zinc-900 p-2 shadow-xl">
+          {players.map((p) => (
+            <div key={p.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs text-zinc-300">
+              <span className="flex items-center gap-2">
+                {p.isFacilitator ? <Crown className="h-3 w-3 text-yellow-500" /> : <User className="h-3 w-3 text-zinc-600" />}
+                {p.name}
+              </span>
+              {!p.isFacilitator && (
+                <button onClick={() => { onKick(p.id); }} className="text-zinc-600 hover:text-red-400" title="Remove">
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -196,6 +250,18 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
   const secs = timeLeft !== null ? timeLeft % 60 : 0;
   const isRunning = room.timerStartedAt !== null && timeLeft !== null && timeLeft > 0;
   const isExpired = timeLeft === 0 && room.timerStartedAt !== null;
+
+  // Timer paused — show frozen time
+  if (room.isPaused && room.pausedTimeLeft !== null) {
+    const pMins = Math.floor(room.pausedTimeLeft / 60);
+    const pSecs = room.pausedTimeLeft % 60;
+    return (
+      <div className="flex items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-lg font-black tabular-nums text-zinc-500">
+        <Pause className="h-4 w-4" />
+        {pMins}:{pSecs.toString().padStart(2, "0")}
+      </div>
+    );
+  }
 
   // Timer is running or expired — show countdown for everyone
   if (room.timerStartedAt) {
@@ -258,6 +324,12 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
               Off
             </button>
           </div>
+          <button onClick={() => act({ type: "toggle-auto-advance" })}
+            className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              room.autoAdvance ? "border-violet-600 bg-violet-600/10 text-violet-400" : "border-zinc-700 text-zinc-500 hover:border-zinc-600"
+            }`}>
+            <Zap className="h-3 w-3" /> Auto-advance {room.autoAdvance ? "ON" : "OFF"}
+          </button>
         </div>
       )}
     </div>
@@ -265,7 +337,7 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
 }
 
 // --- LOBBY ---
-function LobbyView({ room, isFacilitator, players, onStart }: { room: Room; isFacilitator: boolean; players: Room["players"][string][]; onStart: () => void }) {
+function LobbyView({ room, isFacilitator, players, onStart, onKick }: { room: Room; isFacilitator: boolean; players: Room["players"][string][]; onStart: () => void; onKick: (id: string) => void }) {
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const joinUrl = typeof window !== "undefined" ? `${window.location.origin}/room/${room.code}` : "";
@@ -306,6 +378,11 @@ function LobbyView({ room, isFacilitator, players, onStart }: { room: Room; isFa
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
             {p.isFacilitator ? <Crown className="h-3.5 w-3.5 text-yellow-500" /> : <User className="h-3.5 w-3.5 text-zinc-600" />}
             <span className="text-zinc-300">{p.name}</span>
+            {isFacilitator && !p.isFacilitator && (
+              <button onClick={() => onKick(p.id)} className="text-zinc-600 hover:text-red-400" title="Remove player">
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -322,7 +399,7 @@ function LobbyView({ room, isFacilitator, players, onStart }: { room: Room; isFa
 }
 
 // --- DRAW ---
-function DrawView({ scenario, isFacilitator, onAdvance }: { scenario: string; isFacilitator: boolean; onAdvance: () => void }) {
+function DrawView({ scenario, isFacilitator, onAdvance, onSkip }: { scenario: string; isFacilitator: boolean; onAdvance: () => void; onSkip: () => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center">
       <div className="relative w-full max-w-md">
@@ -335,10 +412,16 @@ function DrawView({ scenario, isFacilitator, onAdvance }: { scenario: string; is
         </MagicCard>
       </div>
       {isFacilitator ? (
-        <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} onClick={onAdvance}
-          className="mt-8 flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
-          Open Voting <ChevronRight className="h-4 w-4" />
-        </motion.button>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="mt-8 flex items-center gap-3">
+          <button onClick={onSkip}
+            className="flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-400 hover:border-zinc-500">
+            <RefreshCw className="h-4 w-4" /> Skip Card
+          </button>
+          <button onClick={onAdvance}
+            className="flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
+            Open Voting <ChevronRight className="h-4 w-4" />
+          </button>
+        </motion.div>
       ) : <p className="mt-8 text-sm text-zinc-500">Read the scenario... voting opens soon.</p>}
     </motion.div>
   );
@@ -378,9 +461,11 @@ function VoteView({ scenario, room, playerId, isFacilitator, onVote, onAdvance }
         ))}
       </div>
       <p className="mt-4 text-xs text-zinc-500">{voteCount} of {total} voted</p>
-      {isFacilitator && voteCount > 0 && (
-        <button onClick={onAdvance} className="mt-3 flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-violet-500">
-          Share Reasons <ChevronRight className="h-4 w-4" />
+      {isFacilitator && (
+        <button onClick={onAdvance} className={`mt-3 flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold ${
+          voteCount > 0 ? "bg-violet-600 text-white hover:bg-violet-500" : "border border-zinc-700 text-zinc-400 hover:border-zinc-500"
+        }`}>
+          {voteCount === 0 ? "Force Skip" : "Share Reasons"} <ChevronRight className="h-4 w-4" />
         </button>
       )}
     </motion.div>
@@ -419,9 +504,11 @@ function ReasonView({ scenario, room, playerId, playerName, isFacilitator, onSub
         </div>
       )}
       <p className="mt-4 text-xs text-zinc-500">{reasonCount} of {total} submitted</p>
-      {isFacilitator && reasonCount > 0 && (
-        <button onClick={onAdvance} className="mt-3 flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-violet-500">
-          Reveal Board <ChevronRight className="h-4 w-4" />
+      {isFacilitator && (
+        <button onClick={onAdvance} className={`mt-3 flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold ${
+          reasonCount > 0 ? "bg-violet-600 text-white hover:bg-violet-500" : "border border-zinc-700 text-zinc-400 hover:border-zinc-500"
+        }`}>
+          {reasonCount === 0 ? "Force Skip" : "Reveal Board"} <ChevronRight className="h-4 w-4" />
         </button>
       )}
     </motion.div>
@@ -429,8 +516,9 @@ function ReasonView({ scenario, room, playerId, playerName, isFacilitator, onSub
 }
 
 // --- REVEAL / REFLECT ---
-function RevealView({ room, playerId, isFacilitator, onReflect, onRevote, onNext }: {
+function RevealView({ room, playerId, isFacilitator, scenario, onReflect, onRevote, onNext }: {
   room: Room; playerId: string; isFacilitator: boolean;
+  scenario: { text: string; prompts?: string[] } | null;
   onReflect: () => void; onRevote: (v: Vote) => void; onNext: () => void;
 }) {
   const isReflect = room.phase === "reflect";
@@ -504,6 +592,9 @@ function RevealView({ room, playerId, isFacilitator, onReflect, onRevote, onNext
           </div>
         </div>
       )}
+      {isFacilitator && scenario?.prompts && scenario.prompts.length > 0 && (
+        <DiscussionPrompts prompts={scenario.prompts} />
+      )}
       {isFacilitator && (
         <div className="mt-8 flex gap-3">
           {!isReflect && <button onClick={onReflect} className="flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-zinc-500"><RefreshCw className="h-4 w-4" /> Open Revoting</button>}
@@ -514,6 +605,32 @@ function RevealView({ room, playerId, isFacilitator, onReflect, onRevote, onNext
   );
 }
 
+// --- DISCUSSION PROMPTS ---
+function DiscussionPrompts({ prompts }: { prompts: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-6 w-full max-w-md">
+      <button onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between rounded-xl border border-violet-900/50 bg-violet-950/20 px-4 py-3 text-sm font-semibold text-violet-300 hover:bg-violet-950/30">
+        <span className="flex items-center gap-2">
+          <MessageSquareWarning className="h-4 w-4" />
+          Discussion Prompts ({prompts.length})
+        </span>
+        <ChevronRight className={`h-4 w-4 transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2">
+          {prompts.map((p, i) => (
+            <div key={i} className="rounded-lg border border-violet-900/30 bg-violet-950/10 px-4 py-3 text-sm text-violet-200">
+              {p}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- SUMMARY ---
 function SummaryView({ room, onReset }: { room: Room; onReset: () => void }) {
   const allRounds = [...room.roundHistory];
@@ -521,10 +638,39 @@ function SummaryView({ room, onReset }: { room: Room; onReset: () => void }) {
   allRounds.forEach((r) => Object.values(r.votes).forEach((v) => totals[v]++));
   const total = totals.erode + totals.depends + totals.support;
   const confettiFired = useRef(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     confettiFired.current = true;
   }, []);
+
+  function buildResultsText() {
+    const lines: string[] = ["The AI Effect — Game Results", `${allRounds.length} rounds played`, ""];
+    lines.push(`Erode: ${totals.erode}  |  Depends: ${totals.depends}  |  Support: ${totals.support}`, "");
+    allRounds.forEach((r, i) => {
+      const card = scenarios[r.cardIndex];
+      const rv = Object.values(r.votes);
+      const e = rv.filter((v) => v === "erode").length;
+      const d = rv.filter((v) => v === "depends").length;
+      const s = rv.filter((v) => v === "support").length;
+      lines.push(`Round ${i + 1}: ${card?.text || "Unknown scenario"}`);
+      lines.push(`  Erode ${e} | Depends ${d} | Support ${s}`);
+    });
+    return lines.join("\n");
+  }
+
+  async function handleExport() {
+    const text = buildResultsText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "The AI Effect — Results", text });
+        return;
+      } catch {}
+    }
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6">
@@ -551,9 +697,15 @@ function SummaryView({ room, onReset }: { room: Room; onReset: () => void }) {
           </div>
         </BlurFade>
       )}
-      <button onClick={onReset} className="mt-8 flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
-        <RotateCcw className="h-4 w-4" /> Play Again
-      </button>
+      <div className="mt-8 flex gap-3">
+        <button onClick={handleExport} className="flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-300 hover:border-zinc-500">
+          {copied ? <Check className="h-4 w-4 text-green-400" /> : <Download className="h-4 w-4" />}
+          {copied ? "Copied!" : "Export Results"}
+        </button>
+        <button onClick={onReset} className="flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
+          <RotateCcw className="h-4 w-4" /> Play Again
+        </button>
+      </div>
     </div>
   );
 }
