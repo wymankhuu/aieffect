@@ -44,10 +44,16 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
   const [room, setRoom] = useState<Room | null>(null);
 
   useEffect(() => {
-    const boardId = `board-${code}-${Date.now()}`;
-    const es = new EventSource(`/api/room/stream?code=${code}&playerId=${boardId}`);
-    es.onmessage = (e) => { try { setRoom(JSON.parse(e.data)); } catch {} };
-    return () => es.close();
+    let active = true;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/room/poll?code=${code}`);
+        if (res.ok && active) setRoom(await res.json());
+      } catch {}
+    };
+    poll();
+    const interval = setInterval(poll, 1500);
+    return () => { active = false; clearInterval(interval); };
   }, [code]);
 
   if (!room) {

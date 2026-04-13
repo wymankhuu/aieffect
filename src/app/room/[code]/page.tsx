@@ -76,9 +76,16 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   useEffect(() => {
     if (!playerId) return;
-    const es = new EventSource(`/api/room/stream?code=${code}&playerId=${playerId}`);
-    es.onmessage = (e) => { try { setRoom(JSON.parse(e.data)); } catch {} };
-    return () => es.close();
+    let active = true;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/room/poll?code=${code}`);
+        if (res.ok && active) setRoom(await res.json());
+      } catch {}
+    };
+    poll();
+    const interval = setInterval(poll, 1500);
+    return () => { active = false; clearInterval(interval); };
   }, [code, playerId]);
 
   const act = useCallback(async (action: Record<string, unknown>) => {
