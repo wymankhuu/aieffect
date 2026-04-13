@@ -320,7 +320,7 @@ function VoteView({ scenario, room, playerId, isFacilitator, onVote, onAdvance }
           <BorderBeam size={120} duration={4} colorFrom="#22c55e" colorTo="#16a34a" />
         </MagicCard>
       </div>
-      <div className="mt-8 flex gap-3">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         {buttons.map(([v, label, Icon, border, bg, text]) => (
           <motion.button key={v} whileTap={{ scale: 0.95 }} disabled={!!myVote} onClick={() => onVote(v)}
             className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition-all ${
@@ -401,31 +401,50 @@ function RevealView({ room, playerId, isFacilitator, onReflect, onRevote, onNext
     grouped[vote].push({ id, text: r?.text || "", name: r?.name || "Player" });
   });
   const myVote = activeVotes[playerId];
+  const totalVotes = Object.keys(activeVotes).length;
+  const isLargeGroup = Object.keys(room.players).length >= 30;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-full max-w-4xl flex-col items-center">
-      <div className="grid w-full grid-cols-3 gap-4">
-        {cols.map((col) => (
-          <div key={col.vote}>
-            <div className={`mb-3 flex items-center justify-center gap-2 text-sm font-bold ${col.hc}`}>
-              <col.icon className="h-4 w-4" /> {col.label}
-              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${col.cb}`}>
-                <NumberTicker value={grouped[col.vote].length} />
-              </span>
+      {/* Vote distribution bar */}
+      {totalVotes > 0 && (
+        <div className="mb-4 flex h-3 w-full overflow-hidden rounded-full">
+          {cols.map((col) => {
+            const pct = (grouped[col.vote].length / totalVotes) * 100;
+            return <motion.div key={col.vote} className={col.hc.replace("text-", "bg-")} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} />;
+          })}
+        </div>
+      )}
+
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+        {cols.map((col) => {
+          const cards = grouped[col.vote];
+          const showCards = isLargeGroup ? cards.slice(0, 5) : cards;
+          return (
+            <div key={col.vote}>
+              <div className={`mb-3 flex items-center justify-center gap-2 text-sm font-bold ${col.hc}`}>
+                <col.icon className="h-4 w-4" /> {col.label}
+                <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${col.cb}`}>
+                  <NumberTicker value={cards.length} />
+                </span>
+              </div>
+              <div className="space-y-2">
+                {showCards.map((card, i) => (
+                  <BlurFade key={card.id} delay={i * 0.1} inView>
+                    <div className={`rounded-lg border-l-[3px] ${col.bl} ${col.bg} p-3`}>
+                      <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-zinc-500"><User className="h-2.5 w-2.5" /> {card.name}</div>
+                      {card.text && <p className="text-xs leading-relaxed text-zinc-300">{card.text}</p>}
+                    </div>
+                  </BlurFade>
+                ))}
+                {isLargeGroup && cards.length > 5 && (
+                  <p className="text-center text-xs text-zinc-600">+{cards.length - 5} more</p>
+                )}
+                {cards.length === 0 && <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-xs text-zinc-600">No votes</div>}
+              </div>
             </div>
-            <div className="space-y-2">
-              {grouped[col.vote].map((card, i) => (
-                <BlurFade key={card.id} delay={i * 0.1} inView>
-                  <div className={`rounded-lg border-l-[3px] ${col.bl} ${col.bg} p-3`}>
-                    <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-zinc-500"><User className="h-2.5 w-2.5" /> {card.name}</div>
-                    {card.text && <p className="text-xs leading-relaxed text-zinc-300">{card.text}</p>}
-                  </div>
-                </BlurFade>
-              ))}
-              {grouped[col.vote].length === 0 && <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-xs text-zinc-600">No votes</div>}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {isReflect && (
         <div className="mt-8 flex flex-col items-center gap-3">
