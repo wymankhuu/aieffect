@@ -1,10 +1,17 @@
 import { z } from "zod";
 import { joinRoom, roomExists } from "@/lib/game-store";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 const JoinSchema = z.object({
   code: z.string().min(1).max(10),
   name: z.string().trim().min(1).max(50).default("Player"),
+  turnstileToken: z.string().optional(),
 });
+
+function clientIp(req: Request): string | undefined {
+  const fwd = req.headers.get("x-forwarded-for");
+  return fwd ? fwd.split(",")[0].trim() : req.headers.get("x-real-ip") ?? undefined;
+}
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -17,7 +24,10 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return Response.json({ error: "Invalid input" }, { status: 400 });
   }
-  const { code, name } = parsed.data;
+  const { code, name, turnstileToken } = parsed.data;
+  if (!(await verifyTurnstile(turnstileToken, clientIp(req)))) {
+    return Response.json({ error: "Bot check failed" }, { status: 403 });
+  }
   const upper = code.toUpperCase();
   if (!(await roomExists(upper))) return Response.json({ error: "Room not found" }, { status: 404 });
 

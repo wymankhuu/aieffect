@@ -20,6 +20,7 @@ import { NumberTicker } from "@/components/ui/number-ticker";
 import { Confetti } from "@/components/ui/confetti";
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
+import { Turnstile, turnstileEnabled } from "@/components/turnstile";
 
 type Vote = "erode" | "depends" | "support";
 type Room = {
@@ -54,6 +55,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   const [joinName, setJoinName] = useState("");
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState("");
+  const [joinTurnstileToken, setJoinTurnstileToken] = useState<string | null>(null);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -66,11 +68,12 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 
   async function handleQuickJoin() {
     if (!joinName.trim()) { setJoinError("Enter your name"); return; }
+    if (turnstileEnabled && !joinTurnstileToken) { setJoinError("Please complete the bot check"); return; }
     setJoinLoading(true);
     const res = await fetch("/api/room/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, name: joinName.trim() }),
+      body: JSON.stringify({ code, name: joinName.trim(), turnstileToken: joinTurnstileToken }),
     });
     const data = await res.json();
     if (data.error) { setJoinError(data.error); setJoinLoading(false); return; }
@@ -129,6 +132,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
             onKeyDown={(e) => e.key === "Enter" && handleQuickJoin()}
             className="w-full rounded-xl border border-[#E8DCC0] bg-[#F5EAD4] px-4 py-3 text-sm text-[#1A1033] placeholder:text-[#A89CC0] focus:border-[#1A1033] focus:outline-none" autoFocus />
           {joinError && <p className="text-xs text-red-400 text-center">{joinError}</p>}
+          <Turnstile onToken={setJoinTurnstileToken} />
           <button onClick={handleQuickJoin} disabled={joinLoading}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A1033] px-4 py-3 text-sm font-bold text-white hover:bg-[#FF3366] disabled:opacity-50">
             <LogIn className="h-4 w-4" /> {joinLoading ? "Joining..." : "Join"}

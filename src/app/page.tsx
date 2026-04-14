@@ -10,6 +10,7 @@ import {
 import { Particles } from "@/components/ui/particles";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Marquee } from "@/components/ui/marquee";
+import { Turnstile, turnstileEnabled } from "@/components/turnstile";
 
 const marqueeScenarios = [
   { icon: MessageCircle, text: "AI writes your apology text" },
@@ -35,16 +36,19 @@ export default function Home() {
   const [error, setError] = useState("");
   const [createdCode, setCreatedCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   async function handleCreate() {
     if (!name.trim()) { setError("Enter your name"); return; }
+    if (turnstileEnabled && !turnstileToken) { setError("Please complete the bot check"); return; }
     setLoading(true);
     const res = await fetch("/api/room/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), rounds }),
+      body: JSON.stringify({ name: name.trim(), rounds, turnstileToken }),
     });
     const data = await res.json();
+    if (data.error) { setError(data.error); setLoading(false); return; }
     sessionStorage.setItem(`player-${data.code}`, data.playerId);
     setCreatedCode(data.code);
     setLoading(false);
@@ -53,11 +57,12 @@ export default function Home() {
   async function handleJoin() {
     if (!name.trim()) { setError("Enter your name"); return; }
     if (joinCode.length !== 4) { setError("Enter a 4-letter code"); return; }
+    if (turnstileEnabled && !turnstileToken) { setError("Please complete the bot check"); return; }
     setLoading(true);
     const res = await fetch("/api/room/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: joinCode.toUpperCase(), name: name.trim() }),
+      body: JSON.stringify({ code: joinCode.toUpperCase(), name: name.trim(), turnstileToken }),
     });
     const data = await res.json();
     if (data.error) { setError(data.error); setLoading(false); return; }
@@ -131,6 +136,7 @@ export default function Home() {
                 }`} />
             </div>
             {error && <p className="text-xs text-[#C2185B] text-center">{error}</p>}
+            <Turnstile onToken={setTurnstileToken} />
             <button onClick={handleCreate} disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A1033] px-4 py-3 text-sm font-bold text-[#FAF4E8] transition-colors hover:bg-[#FF3366] disabled:opacity-50">
               <Play className="h-4 w-4" /> {loading ? "Creating..." : "Create Room"}
@@ -149,6 +155,7 @@ export default function Home() {
               onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setError(""); }}
               className="w-full rounded-xl border border-[#E8DCC0] bg-[#FFFBF2] px-4 py-3 text-center font-serif text-lg font-bold uppercase tracking-[0.3em] text-[#1A1033] placeholder:text-[#A89CC0] placeholder:tracking-normal placeholder:text-sm placeholder:font-normal focus:border-[#FF3366] focus:outline-none" />
             {error && <p className="text-xs text-[#C2185B] text-center">{error}</p>}
+            <Turnstile onToken={setTurnstileToken} />
             <button onClick={handleJoin} disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A1033] px-4 py-3 text-sm font-bold text-[#FAF4E8] transition-colors hover:bg-[#FF3366] disabled:opacity-50">
               <LogIn className="h-4 w-4" /> {loading ? "Joining..." : "Join Game"}
