@@ -35,7 +35,7 @@ export default function RootLayout({
           className="fixed left-6 top-4 z-50 inline-flex items-center"
           aria-label="The AI Effect — home"
         >
-          <span className="bg-gradient-to-r from-[#1A1033] to-[#FF6699] bg-clip-text text-xl font-black tracking-tight text-transparent sm:text-2xl">
+          <span className="bg-gradient-to-r from-[#1A1033] to-[#FF6699] bg-clip-text font-serif text-xl font-bold tracking-tight text-transparent sm:text-2xl">
             The AI Effect
           </span>
         </Link>
