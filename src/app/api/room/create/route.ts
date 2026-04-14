@@ -1,11 +1,9 @@
 import { z } from "zod";
 import { createRoomIfAbsent } from "@/lib/game-store";
-import { verifyTurnstile } from "@/lib/turnstile";
 
 const CreateSchema = z.object({
   name: z.string().trim().min(1).max(50).default("Host"),
   rounds: z.number().int().min(1).max(50).default(10),
-  turnstileToken: z.string().optional(),
 });
 
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -15,11 +13,6 @@ function randomCode(): string {
   let code = "";
   for (let i = 0; i < 4; i++) code += CHARS[Math.floor(Math.random() * CHARS.length)];
   return code;
-}
-
-function clientIp(req: Request): string | undefined {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd ? fwd.split(",")[0].trim() : req.headers.get("x-real-ip") ?? undefined;
 }
 
 export async function POST(req: Request) {
@@ -33,10 +26,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return Response.json({ error: "Invalid input" }, { status: 400 });
   }
-  const { name, rounds, turnstileToken } = parsed.data;
-  if (!(await verifyTurnstile(turnstileToken, clientIp(req)))) {
-    return Response.json({ error: "Bot check failed" }, { status: 403 });
-  }
+  const { name, rounds } = parsed.data;
   const id = crypto.randomUUID();
   for (let attempt = 0; attempt < MAX_COLLISION_RETRIES; attempt++) {
     const code = randomCode();
