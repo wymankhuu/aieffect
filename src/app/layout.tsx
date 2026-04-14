@@ -56,6 +56,21 @@ export default function RootLayout({
               className="h-7 w-auto"
             />
           </Link>
+          <Link
+            href="https://www.bankstreet.edu/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center"
+            aria-label="Bank Street"
+          >
+            <Image
+              src="/bankstreet-logo.png"
+              alt="Bank Street"
+              width={28}
+              height={28}
+              className="h-7 w-auto"
+            />
+          </Link>
           <span>
             Inspired by{" "}
             <a
