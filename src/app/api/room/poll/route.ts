@@ -9,5 +9,10 @@ export async function GET(req: Request) {
   await checkAutoAdvance(code);
   const room = await getRoom(code);
   if (!room) return Response.json({ error: "Room not found" }, { status: 404 });
-  return Response.json(room);
+  const etag = `"v${room.version ?? 0}"`;
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (ifNoneMatch === etag) {
+    return new Response(null, { status: 304, headers: { ETag: etag } });
+  }
+  return Response.json(room, { headers: { ETag: etag } });
 }

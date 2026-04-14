@@ -82,15 +82,31 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   useEffect(() => {
     if (!playerId) return;
     let active = true;
+    let etag: string | null = null;
+    let timer: ReturnType<typeof setTimeout>;
     const poll = async () => {
       try {
-        const res = await fetch(`/api/room/poll?code=${code}`);
-        if (res.ok && active) setRoom(await res.json());
+        const res = await fetch(`/api/room/poll?code=${code}`, {
+          headers: etag ? { "If-None-Match": etag } : undefined,
+        });
+        if (!active) return;
+        if (res.status === 304) return;
+        if (res.ok) {
+          etag = res.headers.get("ETag");
+          setRoom(await res.json());
+        }
       } catch {}
     };
+    const schedule = () => {
+      // Jittered 1.3-1.7s interval to avoid thundering herd across clients.
+      timer = setTimeout(async () => {
+        await poll();
+        if (active) schedule();
+      }, 1300 + Math.random() * 400);
+    };
     poll();
-    const interval = setInterval(poll, 1500);
-    return () => { active = false; clearInterval(interval); };
+    schedule();
+    return () => { active = false; clearTimeout(timer); };
   }, [code, playerId]);
 
   const act = useCallback(async (action: Record<string, unknown>) => {
