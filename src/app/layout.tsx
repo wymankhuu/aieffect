@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   title: "The AI Effect",
   description:
     "A game to uncover how AI can strengthen human connection, and when it might pull us apart.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false, noimageindex: true },
+  },
 };
 
 export default function RootLayout({
