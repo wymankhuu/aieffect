@@ -150,7 +150,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-[#E8DCC0]/50 px-3 py-2 sm:px-4 sm:py-3">
+      <div className="flex items-center justify-between py-2 pl-40 pr-3 sm:py-3 sm:pl-52 sm:pr-4">
         <div className="flex items-center gap-2 sm:gap-3">
           <button onClick={() => { sessionStorage.removeItem(`player-${code}`); router.push("/"); }}
             className="text-[#A89CC0] hover:text-[#6B5F87]" title="Leave game">
@@ -403,12 +403,12 @@ function DrawView({ scenario, isFacilitator, onAdvance, onSkip }: { scenario: st
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center">
       <div className="relative w-full max-w-md">
-        <MagicCard className="relative overflow-hidden rounded-2xl border-green-900/30 bg-gradient-to-br from-[#1a3a2e] to-[#0f2920] p-8" gradientColor="rgba(34,197,94,0.08)">
+        <MagicCard className="relative overflow-hidden rounded-2xl border-2 border-[#1A1033]/30 bg-gradient-to-br from-[#FFFBF2] to-[#F5EAD4] p-10 sm:p-14" gradientColor="rgba(255,51,102,0.06)">
           <div className="flex items-start gap-3">
-            <MessageSquareWarning className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-400" />
-            <TypingAnimation className="text-base leading-relaxed text-green-100" duration={30} showCursor={false}>{scenario}</TypingAnimation>
+            <MessageSquareWarning className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#FF3366]" />
+            <TypingAnimation className="text-lg leading-relaxed text-[#1A1033] font-medium" duration={30} showCursor={false}>{scenario}</TypingAnimation>
           </div>
-          <BorderBeam size={120} duration={4} colorFrom="#22c55e" colorTo="#16a34a" />
+          <BorderBeam size={120} duration={4} colorFrom="#FF3366" colorTo="#1A1033" />
         </MagicCard>
       </div>
       {isFacilitator ? (
@@ -435,28 +435,28 @@ function VoteView({ scenario, room, playerId, isFacilitator, onVote, onAdvance }
   const voteCount = Object.keys(room.votes).length;
   const total = Object.keys(room.players).length;
   const buttons: [Vote, string, typeof HeartOff, string, string, string][] = [
-    ["erode", "Erode", HeartOff, "border-red-900/50", "bg-red-950/30", "text-red-300"],
-    ["depends", "Depends", Scale, "border-yellow-900/50", "bg-yellow-950/30", "text-yellow-300"],
-    ["support", "Support", HeartHandshake, "border-green-900/50", "bg-green-950/30", "text-green-300"],
+    ["erode", "Erode", HeartOff, "border-[#B91C1C]", "bg-[#DC2626]", "text-white"],
+    ["depends", "Depends", Scale, "border-[#B45309]", "bg-[#F59E0B]", "text-[#1A1033]"],
+    ["support", "Support", HeartHandshake, "border-[#047857]", "bg-[#10B981]", "text-white"],
   ];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center">
       <div className="relative w-full max-w-md">
-        <MagicCard className="relative overflow-hidden rounded-2xl border-green-900/30 bg-gradient-to-br from-[#1a3a2e] to-[#0f2920] p-8" gradientColor="rgba(34,197,94,0.08)">
-          <p className="text-base leading-relaxed text-green-100">{scenario}</p>
+        <MagicCard className="relative overflow-hidden rounded-2xl border-2 border-[#1A1033]/30 bg-gradient-to-br from-[#FFFBF2] to-[#F5EAD4] p-10 sm:p-14" gradientColor="rgba(255,51,102,0.06)">
+          <p className="text-lg leading-relaxed text-[#1A1033] font-medium">{scenario}</p>
           <BorderBeam size={120} duration={4} colorFrom="#22c55e" colorTo="#16a34a" />
         </MagicCard>
       </div>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         {buttons.map(([v, label, Icon, border, bg, text]) => (
           <motion.button key={v} whileTap={{ scale: 0.95 }} disabled={!!myVote} onClick={() => onVote(v)}
-            className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition-all ${
-              myVote === v ? `${border} ${bg} ${text} scale-105 ring-1 ring-current`
+            className={`flex items-center gap-2 rounded-xl border-2 px-6 py-3.5 text-base font-bold shadow-sm transition-all ${
+              myVote === v ? `${border} ${bg} ${text} scale-105 ring-2 ring-offset-2 ring-offset-[#FAF4E8] ring-current`
               : myVote ? `${border} ${bg} ${text} opacity-40`
-              : `${border} ${bg} ${text} hover:brightness-125`
+              : `${border} ${bg} ${text} hover:brightness-110`
             }`}>
-            <Icon className="h-4 w-4" /> {label}
+            <Icon className="h-5 w-5" /> {label}
           </motion.button>
         ))}
       </div>
@@ -483,18 +483,18 @@ function ReasonView({ scenario, room, playerId, playerName, isFacilitator, onSub
   const total = Object.keys(room.players).length;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-full max-w-md flex-col items-center px-2">
-      <div className="mb-4 rounded-xl border border-[#E8DCC0] bg-[#F5EAD4]/50 px-4 py-3 text-center text-xs text-[#6B5F87] sm:mb-6">{scenario}</div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-full max-w-2xl flex-col items-center px-2">
+      <div className="mb-6 w-full rounded-xl border-2 border-[#1A1033]/20 bg-[#FFFBF2] px-6 py-5 text-center text-lg leading-relaxed font-medium text-[#1A1033] sm:mb-8 sm:text-xl">{scenario}</div>
       {!submitted ? (
         <>
-          <h3 className="text-lg font-bold">Why did you choose that?</h3>
-          <p className="mt-1 text-sm text-[#8B7FA8]">Share your reasoning (or skip).</p>
+          <h3 className="font-serif text-3xl font-bold text-[#1A1033] sm:text-4xl">Why did you choose that?</h3>
+          <p className="mt-2 text-lg text-[#6B5F87] sm:text-xl">Share your reasoning (or skip).</p>
           <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 280))} placeholder="I think this would..."
-            rows={3} className="mt-4 w-full resize-none rounded-xl border border-[#E8DCC0] bg-[#F5EAD4] px-4 py-3 text-sm text-[#1A1033] placeholder:text-[#A89CC0] focus:border-[#1A1033] focus:outline-none" />
-          <div className="mt-1 text-right text-xs text-[#A89CC0]">{text.length}/280</div>
+            rows={4} className="mt-6 w-full resize-none rounded-xl border-2 border-[#1A1033]/30 bg-[#FFFBF2] px-5 py-4 text-lg text-[#1A1033] placeholder:text-[#A89CC0] focus:border-[#1A1033] focus:outline-none" />
+          <div className="mt-2 w-full text-right text-sm text-[#8B7FA8]">{text.length}/280</div>
           <button onClick={() => onSubmit(text.trim(), playerName)}
-            className="mt-4 flex items-center gap-2 rounded-full bg-[#1A1033] px-6 py-3 text-sm font-bold text-white hover:bg-[#FF3366]">
-            <Send className="h-4 w-4" /> {text.trim() ? "Submit" : "Skip"}
+            className="mt-5 flex items-center gap-2 rounded-full bg-[#1A1033] px-8 py-4 text-base font-bold text-white hover:bg-[#FF3366]">
+            <Send className="h-5 w-5" /> {text.trim() ? "Submit" : "Skip"}
           </button>
         </>
       ) : (
@@ -523,10 +523,10 @@ function RevealView({ room, playerId, isFacilitator, scenario, onReflect, onRevo
 }) {
   const isReflect = room.phase === "reflect";
   const activeVotes = { ...room.votes, ...(isReflect ? room.revisedVotes : {}) };
-  const cols: { vote: Vote; label: string; icon: typeof HeartOff; hc: string; bg: string; bl: string; cb: string }[] = [
-    { vote: "erode", label: "Erode", icon: HeartOff, hc: "text-red-400", bg: "bg-red-950/20", bl: "border-l-red-400", cb: "bg-red-400/10" },
-    { vote: "depends", label: "Depends", icon: Scale, hc: "text-yellow-400", bg: "bg-yellow-950/20", bl: "border-l-yellow-400", cb: "bg-yellow-400/10" },
-    { vote: "support", label: "Support", icon: HeartHandshake, hc: "text-green-400", bg: "bg-green-950/20", bl: "border-l-green-400", cb: "bg-green-400/10" },
+  const cols: { vote: Vote; label: string; icon: typeof HeartOff; hc: string; bg: string; bl: string; cb: string; btnBg: string; btnBorder: string; btnText: string }[] = [
+    { vote: "erode", label: "Erode", icon: HeartOff, hc: "text-[#DC2626]", bg: "bg-[#FEE2E2]", bl: "border-l-[#DC2626]", cb: "bg-[#FEE2E2] text-[#B91C1C]", btnBg: "bg-[#DC2626]", btnBorder: "border-[#B91C1C]", btnText: "text-white" },
+    { vote: "depends", label: "Depends", icon: Scale, hc: "text-[#B45309]", bg: "bg-[#FEF3C7]", bl: "border-l-[#F59E0B]", cb: "bg-[#FEF3C7] text-[#92400E]", btnBg: "bg-[#F59E0B]", btnBorder: "border-[#B45309]", btnText: "text-[#1A1033]" },
+    { vote: "support", label: "Support", icon: HeartHandshake, hc: "text-[#047857]", bg: "bg-[#D1FAE5]", bl: "border-l-[#10B981]", cb: "bg-[#D1FAE5] text-[#065F46]", btnBg: "bg-[#10B981]", btnBorder: "border-[#047857]", btnText: "text-white" },
   ];
   const grouped: Record<Vote, { id: string; text: string; name: string }[]> = { erode: [], depends: [], support: [] };
   Object.entries(activeVotes).forEach(([id, vote]) => {
@@ -582,12 +582,12 @@ function RevealView({ room, playerId, isFacilitator, scenario, onReflect, onRevo
       {isReflect && (
         <div className="mt-8 flex flex-col items-center gap-3">
           <p className="flex animate-pulse items-center gap-2 text-sm font-semibold text-[#FF6699]"><RefreshCw className="h-4 w-4" /> Changed your mind? Tap to revote</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-3">
             {cols.map((col) => (
               <button key={col.vote} onClick={() => onRevote(col.vote)}
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
-                  myVote === col.vote ? `border-current ${col.hc} ring-1 ring-current` : "border-[#E8DCC0] text-[#8B7FA8] hover:border-[#A89CC0]"
-                }`}><col.icon className="h-3 w-3" /> {col.label}</button>
+                className={`flex items-center gap-2 rounded-xl border-2 px-6 py-3.5 text-base font-bold shadow-sm transition-all ${col.btnBorder} ${col.btnBg} ${col.btnText} ${
+                  myVote === col.vote ? "scale-105 ring-2 ring-offset-2 ring-offset-[#FAF4E8] ring-current" : "hover:brightness-110"
+                }`}><col.icon className="h-5 w-5" /> {col.label}</button>
             ))}
           </div>
         </div>
@@ -611,7 +611,7 @@ function DiscussionPrompts({ prompts }: { prompts: string[] }) {
   return (
     <div className="mt-6 w-full max-w-md">
       <button onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between rounded-xl border border-[#5A2A44]/50 bg-[#3D1B30]/20 px-4 py-3 text-sm font-semibold text-[#FFB8CC] hover:bg-[#3D1B30]/30">
+        className="flex w-full items-center justify-between rounded-xl border-2 border-[#1A1033] bg-[#1A1033] px-4 py-2.5 text-sm font-bold text-[#FAF4E8] shadow-sm transition-colors hover:bg-[#FF3366] hover:border-[#FF3366]">
         <span className="flex items-center gap-2">
           <MessageSquareWarning className="h-4 w-4" />
           Discussion Prompts ({prompts.length})
@@ -619,9 +619,9 @@ function DiscussionPrompts({ prompts }: { prompts: string[] }) {
         <ChevronRight className={`h-4 w-4 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open && (
-        <div className="mt-2 space-y-2">
+        <div className="mt-3 space-y-2">
           {prompts.map((p, i) => (
-            <div key={i} className="rounded-lg border border-[#5A2A44]/30 bg-[#3D1B30]/10 px-4 py-3 text-sm text-[#FFD6E0]">
+            <div key={i} className="rounded-lg border-2 border-[#1A1033]/30 bg-[#FFFBF2] px-5 py-4 text-base leading-relaxed text-[#1A1033]">
               {p}
             </div>
           ))}

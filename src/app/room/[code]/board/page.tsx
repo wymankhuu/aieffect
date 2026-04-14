@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import scenarios from "@/data/scenarios.json";
 import {
   HeartOff, Scale, HeartHandshake, User, Timer,
-  Users, Layers, MessageSquareWarning, Pause,
+  Users, Layers, MessageSquareWarning, Pause, X,
 } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { MagicCard } from "@/components/ui/magic-card";
@@ -37,9 +37,9 @@ type Room = {
 };
 
 const cols = [
-  { vote: "erode" as Vote, label: "Erode Human Connection", icon: HeartOff, color: "text-red-400", bg: "bg-red-950/30", bl: "border-l-red-400", barBg: "bg-red-500" },
-  { vote: "depends" as Vote, label: "It Depends", icon: Scale, color: "text-yellow-400", bg: "bg-yellow-950/30", bl: "border-l-yellow-400", barBg: "bg-yellow-500" },
-  { vote: "support" as Vote, label: "Support Human Connection", icon: HeartHandshake, color: "text-green-400", bg: "bg-green-950/30", bl: "border-l-green-400", barBg: "bg-green-500" },
+  { vote: "erode" as Vote, label: "Erode Human Connection", icon: HeartOff, color: "text-[#DC2626]", bg: "bg-[#FEE2E2]", bl: "border-l-[#DC2626]", barBg: "bg-[#DC2626]" },
+  { vote: "depends" as Vote, label: "It Depends", icon: Scale, color: "text-[#B45309]", bg: "bg-[#FEF3C7]", bl: "border-l-[#F59E0B]", barBg: "bg-[#F59E0B]" },
+  { vote: "support" as Vote, label: "Support Human Connection", icon: HeartHandshake, color: "text-[#047857]", bg: "bg-[#D1FAE5]", bl: "border-l-[#10B981]", barBg: "bg-[#10B981]" },
 ];
 
 export default function BoardPage({ params }: { params: Promise<{ code: string }> }) {
@@ -93,15 +93,21 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
         </div>
       )}
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#E8DCC0]/50 px-8 py-4">
+      <div className="flex items-center justify-between py-4 pl-52 pr-8">
         <div className="flex items-center gap-4">
-          <h1 className="bg-gradient-to-r from-[#1A1033] to-[#FF6699] bg-clip-text text-xl font-black text-transparent">The AI Effect</h1>
           <span className="text-sm font-bold tracking-widest text-[#FF6699]">{room.code}</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-[#8B7FA8]"><Users className="h-4 w-4" /> {playerCount} players</div>
           <div className="flex items-center gap-2 text-sm text-[#8B7FA8]"><Layers className="h-4 w-4" /> Round {room.currentRound} of {room.totalRounds}</div>
           <BoardTimer room={room} />
+          <button
+            onClick={() => { if (window.opener) window.close(); else window.history.back(); }}
+            className="flex items-center gap-1.5 rounded-full border-2 border-[#1A1033] px-4 py-1.5 text-xs font-bold text-[#1A1033] transition-colors hover:bg-[#1A1033] hover:text-[#FAF4E8]"
+            title="Exit projector mode"
+          >
+            <X className="h-3.5 w-3.5" /> Exit Projector
+          </button>
         </div>
       </div>
 
@@ -109,12 +115,12 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
         {/* Scenario card — always visible during game */}
         {scenario && room.phase !== "lobby" && room.phase !== "summary" && (
           <div className="mx-auto mb-6 w-full max-w-3xl">
-            <MagicCard className="relative overflow-hidden rounded-2xl border-green-900/30 bg-gradient-to-br from-[#1a3a2e] to-[#0f2920] p-8" gradientColor="rgba(34,197,94,0.08)">
+            <MagicCard className="relative overflow-hidden rounded-2xl border-2 border-[#1A1033]/30 bg-gradient-to-br from-[#FFFBF2] to-[#F5EAD4] p-10 sm:p-14" gradientColor="rgba(255,51,102,0.06)">
               <div className="flex items-start gap-4">
-                <MessageSquareWarning className="mt-1 h-6 w-6 flex-shrink-0 text-green-400" />
-                <p className="text-xl leading-relaxed text-green-100">{scenario.text}</p>
+                <MessageSquareWarning className="mt-1 h-6 w-6 flex-shrink-0 text-[#FF3366]" />
+                <p className="text-2xl leading-relaxed text-[#1A1033] font-medium">{scenario.text}</p>
               </div>
-              <BorderBeam size={150} duration={4} colorFrom="#22c55e" colorTo="#16a34a" />
+              <BorderBeam size={150} duration={4} colorFrom="#FF3366" colorTo="#1A1033" />
             </MagicCard>
           </div>
         )}
@@ -217,7 +223,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
                       ))
                     )}
                     {grouped[c.vote].length === 0 && (
-                      <div className="rounded-xl border border-dashed border-[#E8DCC0] p-6 text-center text-sm text-[#A89CC0]">No votes</div>
+                      <div className="rounded-2xl border-2 border-dashed border-[#1A1033]/20 p-10 text-center text-base font-medium text-[#A89CC0]">No votes</div>
                     )}
                   </div>
                 ))}
@@ -248,11 +254,11 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
 
 function ReasonCard({ card, col }: { card: { id: string; text: string; name: string }; col: typeof cols[number] }) {
   return (
-    <div className={`rounded-xl border-l-4 ${col.bl} ${col.bg} p-4`}>
-      <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#8B7FA8]">
-        <User className="h-3 w-3" /> {card.name}
+    <div className={`rounded-2xl border-2 border-[#1A1033]/15 border-l-[10px] ${col.bl} ${col.bg} p-6 shadow-sm`}>
+      <div className={`mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wide ${col.color}`}>
+        <User className="h-4 w-4" /> {card.name}
       </div>
-      {card.text && <p className="text-sm leading-relaxed text-[#3F2F6A]">{card.text}</p>}
+      {card.text && <p className="text-lg leading-relaxed text-[#1A1033] font-medium">{card.text}</p>}
     </div>
   );
 }

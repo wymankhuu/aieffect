@@ -31,32 +31,42 @@ export default function RootLayout({
     <html lang="en" className={`${serif.variable} ${sans.variable}`}>
       <body className="min-h-dvh bg-background text-foreground font-sans antialiased">
         <Link
-          href="https://playlab.ai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed left-4 top-4 z-50 inline-flex items-center"
-          aria-label="Playlab"
+          href="/"
+          className="fixed left-6 top-4 z-50 inline-flex items-center"
+          aria-label="The AI Effect — home"
         >
-          <Image
-            src="/playlab-logo.png"
-            alt="Playlab"
-            width={120}
-            height={32}
-            priority
-            className="h-8 w-auto"
-          />
+          <span className="bg-gradient-to-r from-[#1A1033] to-[#FF6699] bg-clip-text text-xl font-black tracking-tight text-transparent sm:text-2xl">
+            The AI Effect
+          </span>
         </Link>
         {children}
-        <footer className="relative z-10 py-6 text-center text-xs text-[#6B5F87] font-sans">
-          Inspired by{" "}
-          <a
-            href="https://www.therithmproject.org/"
+        <footer className="fixed bottom-0 left-0 right-0 z-40 flex flex-col items-center gap-3 bg-[#FAF4E8]/90 py-3 text-center text-xs text-[#6B5F87] font-sans backdrop-blur-sm sm:flex-row sm:justify-center sm:gap-6 sm:py-4">
+          <Link
+            href="https://playlab.ai"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-[#1A1033] underline decoration-[#FF3366] decoration-2 underline-offset-4 transition-colors hover:text-[#FF3366]"
+            className="inline-flex items-center"
+            aria-label="Playlab"
           >
-            The Rithm Project
-          </a>
+            <Image
+              src="/playlab-logo.png"
+              alt="Playlab"
+              width={120}
+              height={28}
+              className="h-7 w-auto"
+            />
+          </Link>
+          <span>
+            Inspired by{" "}
+            <a
+              href="https://www.therithmproject.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#1A1033] underline decoration-[#FF3366] decoration-2 underline-offset-4 transition-colors hover:text-[#FF3366]"
+            >
+              The Rithm Project
+            </a>
+          </span>
         </footer>
       </body>
     </html>
