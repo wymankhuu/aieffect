@@ -104,17 +104,17 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   if (needsJoin) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-6">
-        <span className="mb-2 text-xs font-bold tracking-widest text-violet-400">{code}</span>
+        <span className="mb-2 text-xs font-bold tracking-widest text-[#FF6699]">{code}</span>
         <h2 className="text-lg font-bold">Join Game</h2>
-        <p className="mt-1 text-sm text-zinc-500">This game is in progress — jump in!</p>
+        <p className="mt-1 text-sm text-[#8B7FA8]">This game is in progress — jump in!</p>
         <div className="mt-4 w-full max-w-xs space-y-3">
           <input type="text" placeholder="Your name" value={joinName}
             onChange={(e) => { setJoinName(e.target.value); setJoinError(""); }}
             onKeyDown={(e) => e.key === "Enter" && handleQuickJoin()}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-violet-600 focus:outline-none" autoFocus />
+            className="w-full rounded-xl border border-[#E8DCC0] bg-[#F5EAD4] px-4 py-3 text-sm text-[#1A1033] placeholder:text-[#A89CC0] focus:border-[#1A1033] focus:outline-none" autoFocus />
           {joinError && <p className="text-xs text-red-400 text-center">{joinError}</p>}
           <button onClick={handleQuickJoin} disabled={joinLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white hover:bg-violet-500 disabled:opacity-50">
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A1033] px-4 py-3 text-sm font-bold text-white hover:bg-[#FF3366] disabled:opacity-50">
             <LogIn className="h-4 w-4" /> {joinLoading ? "Joining..." : "Join"}
           </button>
         </div>
@@ -123,7 +123,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
   }
 
   if (!room || !playerId) {
-    return <div className="flex min-h-dvh items-center justify-center text-sm text-zinc-500">Connecting...</div>;
+    return <div className="flex min-h-dvh items-center justify-center text-sm text-[#8B7FA8]">Connecting...</div>;
   }
 
   const me = room.players[playerId];
@@ -139,26 +139,26 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
       {room.isPaused && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
-            <Pause className="h-10 w-10 text-violet-400" />
-            <p className="text-xl font-bold text-zinc-200">Game Paused</p>
+            <Pause className="h-10 w-10 text-[#FF6699]" />
+            <p className="text-xl font-bold text-[#2D1F4F]">Game Paused</p>
             {isFacilitator && (
               <button onClick={() => act({ type: "resume" })}
-                className="mt-2 rounded-full bg-violet-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-violet-500">
+                className="mt-2 rounded-full bg-[#1A1033] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#FF3366]">
                 Resume Game
               </button>
             )}
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-zinc-800/50 px-3 py-2 sm:px-4 sm:py-3">
+      <div className="flex items-center justify-between border-b border-[#E8DCC0]/50 px-3 py-2 sm:px-4 sm:py-3">
         <div className="flex items-center gap-2 sm:gap-3">
           <button onClick={() => { sessionStorage.removeItem(`player-${code}`); router.push("/"); }}
-            className="text-zinc-600 hover:text-zinc-400" title="Leave game">
+            className="text-[#A89CC0] hover:text-[#6B5F87]" title="Leave game">
             <DoorOpen className="h-3.5 w-3.5" />
           </button>
-          <span className="text-xs font-bold tracking-widest text-violet-400">{room.code}</span>
+          <span className="text-xs font-bold tracking-widest text-[#FF6699]">{room.code}</span>
           <PlayerCount players={players} isFacilitator={isFacilitator} onKick={(id) => act({ type: "kick", targetId: id })} />
-          <div className="flex items-center gap-1.5 rounded-full border border-zinc-800 px-2 py-0.5 text-[10px] text-zinc-500 sm:gap-2 sm:px-3 sm:py-1 sm:text-xs">
+          <div className="flex items-center gap-1.5 rounded-full border border-[#E8DCC0] px-2 py-0.5 text-[10px] text-[#8B7FA8] sm:gap-2 sm:px-3 sm:py-1 sm:text-xs">
             <Layers className="h-3 w-3" /> {room.currentRound}/{room.totalRounds}
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
           {isFacilitator && (
             <>
               <button onClick={() => act({ type: room.isPaused ? "resume" : "pause" })}
-                className="flex items-center gap-1 rounded-full border border-zinc-700 px-2.5 py-1.5 text-[10px] font-semibold text-zinc-300 hover:bg-zinc-800 sm:text-xs">
+                className="flex items-center gap-1 rounded-full border border-[#C9BDD8] px-2.5 py-1.5 text-[10px] font-semibold text-[#3F2F6A] hover:bg-[#E8DCC0] sm:text-xs">
                 {room.isPaused ? <Play className="h-2.5 w-2.5" /> : <Pause className="h-2.5 w-2.5" />}
                 {room.isPaused ? "Resume" : "Pause"}
               </button>
@@ -176,7 +176,7 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
                 <Square className="h-2.5 w-2.5" /> End
               </button>
               <button onClick={() => window.open(`/room/${code}/board`, "_blank")}
-                className="hidden items-center gap-1.5 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-500 sm:flex">
+                className="hidden items-center gap-1.5 rounded-full bg-[#1A1033] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#FF3366] sm:flex">
                 <Monitor className="h-3 w-3" /> Projector <ExternalLink className="h-2.5 w-2.5 opacity-60" />
               </button>
             </>
@@ -198,23 +198,23 @@ export default function RoomPage({ params }: { params: Promise<{ code: string }>
 function PlayerCount({ players, isFacilitator, onKick }: { players: Room["players"][string][]; isFacilitator: boolean; onKick: (id: string) => void }) {
   const [open, setOpen] = useState(false);
   if (!isFacilitator) {
-    return <div className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex"><Users className="h-3 w-3" /> {players.length}</div>;
+    return <div className="hidden items-center gap-2 text-xs text-[#8B7FA8] sm:flex"><Users className="h-3 w-3" /> {players.length}</div>;
   }
   return (
     <div className="relative hidden sm:block">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 text-xs text-[#8B7FA8] hover:text-[#3F2F6A]">
         <Users className="h-3 w-3" /> {players.length}
       </button>
       {open && (
-        <div className="absolute top-full left-0 z-50 mt-2 w-48 rounded-xl border border-zinc-800 bg-zinc-900 p-2 shadow-xl">
+        <div className="absolute top-full left-0 z-50 mt-2 w-48 rounded-xl border border-[#E8DCC0] bg-[#F5EAD4] p-2 shadow-xl">
           {players.map((p) => (
-            <div key={p.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs text-zinc-300">
+            <div key={p.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-xs text-[#3F2F6A]">
               <span className="flex items-center gap-2">
-                {p.isFacilitator ? <Crown className="h-3 w-3 text-yellow-500" /> : <User className="h-3 w-3 text-zinc-600" />}
+                {p.isFacilitator ? <Crown className="h-3 w-3 text-yellow-500" /> : <User className="h-3 w-3 text-[#A89CC0]" />}
                 {p.name}
               </span>
               {!p.isFacilitator && (
-                <button onClick={() => { onKick(p.id); }} className="text-zinc-600 hover:text-red-400" title="Remove">
+                <button onClick={() => { onKick(p.id); }} className="text-[#A89CC0] hover:text-red-400" title="Remove">
                   <X className="h-3 w-3" />
                 </button>
               )}
@@ -256,7 +256,7 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
     const pMins = Math.floor(room.pausedTimeLeft / 60);
     const pSecs = room.pausedTimeLeft % 60;
     return (
-      <div className="flex items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-lg font-black tabular-nums text-zinc-500">
+      <div className="flex items-center gap-2 rounded-full border border-[#C9BDD8] px-4 py-2 text-lg font-black tabular-nums text-[#8B7FA8]">
         <Pause className="h-4 w-4" />
         {pMins}:{pSecs.toString().padStart(2, "0")}
       </div>
@@ -267,7 +267,7 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
   if (room.timerStartedAt) {
     return (
       <div className={`flex items-center gap-2 rounded-full border px-4 py-2 text-lg font-black tabular-nums ${
-        isExpired ? "border-red-500/50 bg-red-500/10 text-red-400 animate-pulse" : "border-violet-500/30 bg-violet-500/10 text-zinc-50"
+        isExpired ? "border-red-500/50 bg-red-500/10 text-red-400 animate-pulse" : "border-[#FF3366]/30 bg-[#FF3366]/10 text-[#1A1033]"
       }`}>
         <Timer className="h-4 w-4" />
         {isExpired ? "Time's up!" : `${mins}:${secs.toString().padStart(2, "0")}`}
@@ -278,7 +278,7 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
   // Timer set but not started — show for everyone
   if (room.timerSeconds > 0 && !isFacilitator) {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-zinc-800 px-3 py-1.5 text-sm font-semibold text-zinc-400">
+      <div className="flex items-center gap-2 rounded-full border border-[#E8DCC0] px-3 py-1.5 text-sm font-semibold text-[#6B5F87]">
         <Timer className="h-3.5 w-3.5" /> {room.timerSeconds >= 60 ? `${room.timerSeconds / 60}m` : `${room.timerSeconds}s`}
       </div>
     );
@@ -294,39 +294,39 @@ function GameTimer({ room, isFacilitator, act }: { room: Room; isFacilitator: bo
       {room.timerSeconds > 0 ? (
         <>
           <button onClick={() => setShowPicker(!showPicker)}
-            className="flex items-center gap-1.5 rounded-full border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-600 hover:text-zinc-300">
+            className="flex items-center gap-1.5 rounded-full border border-[#E8DCC0] px-3 py-1.5 text-xs text-[#6B5F87] hover:border-[#A89CC0] hover:text-[#3F2F6A]">
             <Timer className="h-3 w-3" /> {room.timerSeconds}s
           </button>
           <button onClick={() => act({ type: "start-timer" })}
-            className="flex items-center gap-1 rounded-full bg-violet-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-violet-500">
+            className="flex items-center gap-1 rounded-full bg-[#1A1033] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#FF3366]">
             <PlayCircle className="h-3 w-3" /> Start
           </button>
         </>
       ) : (
         <button onClick={() => setShowPicker(!showPicker)}
-          className="flex items-center gap-1.5 rounded-full border border-dashed border-zinc-700 px-3 py-1.5 text-xs text-zinc-500 hover:border-zinc-500 hover:text-zinc-400">
+          className="flex items-center gap-1.5 rounded-full border border-dashed border-[#C9BDD8] px-3 py-1.5 text-xs text-[#8B7FA8] hover:border-[#8B7FA8] hover:text-[#6B5F87]">
           <Timer className="h-3 w-3" /> Set Timer
         </button>
       )}
       {showPicker && (
-        <div className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-900 p-3 shadow-xl">
+        <div className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 rounded-xl border border-[#E8DCC0] bg-[#F5EAD4] p-3 shadow-xl">
           <div className="flex gap-1.5">
             {[30, 60, 90, 120, 180].map((s) => (
               <button key={s} onClick={() => { act({ type: "set-timer", seconds: s }); setShowPicker(false); }}
                 className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  room.timerSeconds === s ? "border-violet-600 bg-violet-600/10 text-violet-400" : "border-zinc-700 text-zinc-400 hover:border-zinc-600"
+                  room.timerSeconds === s ? "border-[#1A1033] bg-[#1A1033]/10 text-[#FF6699]" : "border-[#C9BDD8] text-[#6B5F87] hover:border-[#A89CC0]"
                 }`}>
                 {s >= 60 ? `${s / 60}m` : `${s}s`}
               </button>
             ))}
             <button onClick={() => { act({ type: "set-timer", seconds: 0 }); setShowPicker(false); }}
-              className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-500 hover:border-zinc-600">
+              className="rounded-lg border border-[#C9BDD8] px-2.5 py-1.5 text-xs text-[#8B7FA8] hover:border-[#A89CC0]">
               Off
             </button>
           </div>
           <button onClick={() => act({ type: "toggle-auto-advance" })}
             className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-              room.autoAdvance ? "border-violet-600 bg-violet-600/10 text-violet-400" : "border-zinc-700 text-zinc-500 hover:border-zinc-600"
+              room.autoAdvance ? "border-[#1A1033] bg-[#1A1033]/10 text-[#FF6699]" : "border-[#C9BDD8] text-[#8B7FA8] hover:border-[#A89CC0]"
             }`}>
             <Zap className="h-3 w-3" /> Auto-advance {room.autoAdvance ? "ON" : "OFF"}
           </button>
@@ -344,19 +344,19 @@ function LobbyView({ room, isFacilitator, players, onStart, onKick }: { room: Ro
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6">
-      <div className="mb-4 flex items-center gap-1.5 text-xs text-zinc-500"><Share2 className="h-3 w-3" /> Share this code or scan QR to join</div>
+      <div className="mb-4 flex items-center gap-1.5 text-xs text-[#8B7FA8]"><Share2 className="h-3 w-3" /> Share this code or scan QR to join</div>
 
       {/* Room code + QR toggle */}
       <div className="flex flex-col items-center gap-4">
-        <div className="relative flex items-center gap-3 rounded-2xl bg-zinc-900 px-6 py-4 sm:px-8">
-          <ShineBorder shineColor={["#7c3aed", "#06b6d4", "#22c55e", "#eab308", "#ef4444"]} borderWidth={2} />
-          <span className="text-3xl font-black tracking-[0.4em] text-zinc-50 sm:text-4xl">{room.code}</span>
+        <div className="relative flex items-center gap-3 rounded-2xl bg-[#F5EAD4] px-6 py-4 sm:px-8">
+          <ShineBorder shineColor={["#1A1033", "#06b6d4", "#22c55e", "#eab308", "#ef4444"]} borderWidth={2} />
+          <span className="text-3xl font-black tracking-[0.4em] text-[#1A1033] sm:text-4xl">{room.code}</span>
           <div className="flex gap-1.5">
             <button onClick={() => { navigator.clipboard.writeText(joinUrl || room.code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-              className="text-zinc-500 hover:text-zinc-300" title="Copy link">
+              className="text-[#8B7FA8] hover:text-[#3F2F6A]" title="Copy link">
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             </button>
-            <button onClick={() => setShowQr(!showQr)} className="text-zinc-500 hover:text-zinc-300" title="Show QR code">
+            <button onClick={() => setShowQr(!showQr)} className="text-[#8B7FA8] hover:text-[#3F2F6A]" title="Show QR code">
               <QrCode className="h-4 w-4" />
             </button>
           </div>
@@ -374,12 +374,12 @@ function LobbyView({ room, isFacilitator, players, onStart, onKick }: { room: Ro
       {/* Player list */}
       <div className="mt-6 flex flex-wrap justify-center gap-2 sm:mt-8">
         {players.map((p) => (
-          <div key={p.id} className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
+          <div key={p.id} className="flex items-center gap-2 rounded-full border border-[#E8DCC0] bg-[#F5EAD4] px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
-            {p.isFacilitator ? <Crown className="h-3.5 w-3.5 text-yellow-500" /> : <User className="h-3.5 w-3.5 text-zinc-600" />}
-            <span className="text-zinc-300">{p.name}</span>
+            {p.isFacilitator ? <Crown className="h-3.5 w-3.5 text-yellow-500" /> : <User className="h-3.5 w-3.5 text-[#A89CC0]" />}
+            <span className="text-[#3F2F6A]">{p.name}</span>
             {isFacilitator && !p.isFacilitator && (
-              <button onClick={() => onKick(p.id)} className="text-zinc-600 hover:text-red-400" title="Remove player">
+              <button onClick={() => onKick(p.id)} className="text-[#A89CC0] hover:text-red-400" title="Remove player">
                 <X className="h-3 w-3" />
               </button>
             )}
@@ -389,11 +389,11 @@ function LobbyView({ room, isFacilitator, players, onStart, onKick }: { room: Ro
 
       {isFacilitator ? (
         <div className="mt-6 sm:mt-8">
-          <PulsatingButton className="bg-violet-600 text-sm font-bold text-white" pulseColor="#7c3aed" onClick={onStart}>
+          <PulsatingButton className="bg-[#1A1033] text-sm font-bold text-white" pulseColor="#1A1033" onClick={onStart}>
             <Play className="mr-2 h-4 w-4" /> Start Game — {players.length} player{players.length !== 1 ? "s" : ""}
           </PulsatingButton>
         </div>
-      ) : <p className="mt-6 animate-pulse text-sm text-zinc-500 sm:mt-8">Waiting for facilitator to start...</p>}
+      ) : <p className="mt-6 animate-pulse text-sm text-[#8B7FA8] sm:mt-8">Waiting for facilitator to start...</p>}
     </div>
   );
 }
@@ -414,15 +414,15 @@ function DrawView({ scenario, isFacilitator, onAdvance, onSkip }: { scenario: st
       {isFacilitator ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="mt-8 flex items-center gap-3">
           <button onClick={onSkip}
-            className="flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-400 hover:border-zinc-500">
+            className="flex items-center gap-2 rounded-full border border-[#C9BDD8] px-5 py-3 text-sm font-semibold text-[#6B5F87] hover:border-[#8B7FA8]">
             <RefreshCw className="h-4 w-4" /> Skip Card
           </button>
           <button onClick={onAdvance}
-            className="flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
+            className="flex items-center gap-2 rounded-full bg-[#1A1033] px-6 py-3 text-sm font-bold text-white hover:bg-[#FF3366]">
             Open Voting <ChevronRight className="h-4 w-4" />
           </button>
         </motion.div>
-      ) : <p className="mt-8 text-sm text-zinc-500">Read the scenario... voting opens soon.</p>}
+      ) : <p className="mt-8 text-sm text-[#8B7FA8]">Read the scenario... voting opens soon.</p>}
     </motion.div>
   );
 }
@@ -460,10 +460,10 @@ function VoteView({ scenario, room, playerId, isFacilitator, onVote, onAdvance }
           </motion.button>
         ))}
       </div>
-      <p className="mt-4 text-xs text-zinc-500">{voteCount} of {total} voted</p>
+      <p className="mt-4 text-xs text-[#8B7FA8]">{voteCount} of {total} voted</p>
       {isFacilitator && (
         <button onClick={onAdvance} className={`mt-3 flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold ${
-          voteCount > 0 ? "bg-violet-600 text-white hover:bg-violet-500" : "border border-zinc-700 text-zinc-400 hover:border-zinc-500"
+          voteCount > 0 ? "bg-[#1A1033] text-white hover:bg-[#FF3366]" : "border border-[#C9BDD8] text-[#6B5F87] hover:border-[#8B7FA8]"
         }`}>
           {voteCount === 0 ? "Force Skip" : "Share Reasons"} <ChevronRight className="h-4 w-4" />
         </button>
@@ -484,29 +484,29 @@ function ReasonView({ scenario, room, playerId, playerName, isFacilitator, onSub
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex w-full max-w-md flex-col items-center px-2">
-      <div className="mb-4 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-center text-xs text-zinc-400 sm:mb-6">{scenario}</div>
+      <div className="mb-4 rounded-xl border border-[#E8DCC0] bg-[#F5EAD4]/50 px-4 py-3 text-center text-xs text-[#6B5F87] sm:mb-6">{scenario}</div>
       {!submitted ? (
         <>
           <h3 className="text-lg font-bold">Why did you choose that?</h3>
-          <p className="mt-1 text-sm text-zinc-500">Share your reasoning (or skip).</p>
+          <p className="mt-1 text-sm text-[#8B7FA8]">Share your reasoning (or skip).</p>
           <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 280))} placeholder="I think this would..."
-            rows={3} className="mt-4 w-full resize-none rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-violet-600 focus:outline-none" />
-          <div className="mt-1 text-right text-xs text-zinc-600">{text.length}/280</div>
+            rows={3} className="mt-4 w-full resize-none rounded-xl border border-[#E8DCC0] bg-[#F5EAD4] px-4 py-3 text-sm text-[#1A1033] placeholder:text-[#A89CC0] focus:border-[#1A1033] focus:outline-none" />
+          <div className="mt-1 text-right text-xs text-[#A89CC0]">{text.length}/280</div>
           <button onClick={() => onSubmit(text.trim(), playerName)}
-            className="mt-4 flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
+            className="mt-4 flex items-center gap-2 rounded-full bg-[#1A1033] px-6 py-3 text-sm font-bold text-white hover:bg-[#FF3366]">
             <Send className="h-4 w-4" /> {text.trim() ? "Submit" : "Skip"}
           </button>
         </>
       ) : (
         <div className="flex flex-col items-center">
-          <div className="rounded-full bg-violet-600/20 p-3"><Send className="h-5 w-5 text-violet-400" /></div>
-          <p className="mt-3 text-sm text-zinc-400">Submitted! Waiting for others...</p>
+          <div className="rounded-full bg-[#1A1033]/20 p-3"><Send className="h-5 w-5 text-[#FF6699]" /></div>
+          <p className="mt-3 text-sm text-[#6B5F87]">Submitted! Waiting for others...</p>
         </div>
       )}
-      <p className="mt-4 text-xs text-zinc-500">{reasonCount} of {total} submitted</p>
+      <p className="mt-4 text-xs text-[#8B7FA8]">{reasonCount} of {total} submitted</p>
       {isFacilitator && (
         <button onClick={onAdvance} className={`mt-3 flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold ${
-          reasonCount > 0 ? "bg-violet-600 text-white hover:bg-violet-500" : "border border-zinc-700 text-zinc-400 hover:border-zinc-500"
+          reasonCount > 0 ? "bg-[#1A1033] text-white hover:bg-[#FF3366]" : "border border-[#C9BDD8] text-[#6B5F87] hover:border-[#8B7FA8]"
         }`}>
           {reasonCount === 0 ? "Force Skip" : "Reveal Board"} <ChevronRight className="h-4 w-4" />
         </button>
@@ -565,15 +565,15 @@ function RevealView({ room, playerId, isFacilitator, scenario, onReflect, onRevo
                 {showCards.map((card, i) => (
                   <BlurFade key={card.id} delay={i * 0.1} inView>
                     <div className={`rounded-lg border-l-[3px] ${col.bl} ${col.bg} p-3`}>
-                      <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-zinc-500"><User className="h-2.5 w-2.5" /> {card.name}</div>
-                      {card.text && <p className="text-xs leading-relaxed text-zinc-300">{card.text}</p>}
+                      <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-[#8B7FA8]"><User className="h-2.5 w-2.5" /> {card.name}</div>
+                      {card.text && <p className="text-xs leading-relaxed text-[#3F2F6A]">{card.text}</p>}
                     </div>
                   </BlurFade>
                 ))}
                 {isLargeGroup && cards.length > 5 && (
-                  <p className="text-center text-xs text-zinc-600">+{cards.length - 5} more</p>
+                  <p className="text-center text-xs text-[#A89CC0]">+{cards.length - 5} more</p>
                 )}
-                {cards.length === 0 && <div className="rounded-lg border border-dashed border-zinc-800 p-4 text-center text-xs text-zinc-600">No votes</div>}
+                {cards.length === 0 && <div className="rounded-lg border border-dashed border-[#E8DCC0] p-4 text-center text-xs text-[#A89CC0]">No votes</div>}
               </div>
             </div>
           );
@@ -581,12 +581,12 @@ function RevealView({ room, playerId, isFacilitator, scenario, onReflect, onRevo
       </div>
       {isReflect && (
         <div className="mt-8 flex flex-col items-center gap-3">
-          <p className="flex animate-pulse items-center gap-2 text-sm font-semibold text-violet-400"><RefreshCw className="h-4 w-4" /> Changed your mind? Tap to revote</p>
+          <p className="flex animate-pulse items-center gap-2 text-sm font-semibold text-[#FF6699]"><RefreshCw className="h-4 w-4" /> Changed your mind? Tap to revote</p>
           <div className="flex gap-2">
             {cols.map((col) => (
               <button key={col.vote} onClick={() => onRevote(col.vote)}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
-                  myVote === col.vote ? `border-current ${col.hc} ring-1 ring-current` : "border-zinc-800 text-zinc-500 hover:border-zinc-600"
+                  myVote === col.vote ? `border-current ${col.hc} ring-1 ring-current` : "border-[#E8DCC0] text-[#8B7FA8] hover:border-[#A89CC0]"
                 }`}><col.icon className="h-3 w-3" /> {col.label}</button>
             ))}
           </div>
@@ -597,8 +597,8 @@ function RevealView({ room, playerId, isFacilitator, scenario, onReflect, onRevo
       )}
       {isFacilitator && (
         <div className="mt-8 flex gap-3">
-          {!isReflect && <button onClick={onReflect} className="flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-2.5 text-sm font-bold text-zinc-300 hover:border-zinc-500"><RefreshCw className="h-4 w-4" /> Open Revoting</button>}
-          <button onClick={onNext} className="flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-violet-500">Next Round <ChevronRight className="h-4 w-4" /></button>
+          {!isReflect && <button onClick={onReflect} className="flex items-center gap-2 rounded-full border border-[#C9BDD8] px-5 py-2.5 text-sm font-bold text-[#3F2F6A] hover:border-[#8B7FA8]"><RefreshCw className="h-4 w-4" /> Open Revoting</button>}
+          <button onClick={onNext} className="flex items-center gap-2 rounded-full bg-[#1A1033] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#FF3366]">Next Round <ChevronRight className="h-4 w-4" /></button>
         </div>
       )}
     </motion.div>
@@ -611,7 +611,7 @@ function DiscussionPrompts({ prompts }: { prompts: string[] }) {
   return (
     <div className="mt-6 w-full max-w-md">
       <button onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between rounded-xl border border-violet-900/50 bg-violet-950/20 px-4 py-3 text-sm font-semibold text-violet-300 hover:bg-violet-950/30">
+        className="flex w-full items-center justify-between rounded-xl border border-[#5A2A44]/50 bg-[#3D1B30]/20 px-4 py-3 text-sm font-semibold text-[#FFB8CC] hover:bg-[#3D1B30]/30">
         <span className="flex items-center gap-2">
           <MessageSquareWarning className="h-4 w-4" />
           Discussion Prompts ({prompts.length})
@@ -621,7 +621,7 @@ function DiscussionPrompts({ prompts }: { prompts: string[] }) {
       {open && (
         <div className="mt-2 space-y-2">
           {prompts.map((p, i) => (
-            <div key={i} className="rounded-lg border border-violet-900/30 bg-violet-950/10 px-4 py-3 text-sm text-violet-200">
+            <div key={i} className="rounded-lg border border-[#5A2A44]/30 bg-[#3D1B30]/10 px-4 py-3 text-sm text-[#FFD6E0]">
               {p}
             </div>
           ))}
@@ -676,14 +676,14 @@ function SummaryView({ room, onReset }: { room: Room; onReset: () => void }) {
     <div className="flex min-h-dvh flex-col items-center justify-center px-6">
       {!confettiFired.current && <Confetti />}
       <BlurFade delay={0}><h2 className="text-3xl font-black">Game Complete!</h2></BlurFade>
-      <BlurFade delay={0.2}><p className="mt-2 text-zinc-500">{allRounds.length} rounds played</p></BlurFade>
+      <BlurFade delay={0.2}><p className="mt-2 text-[#8B7FA8]">{allRounds.length} rounds played</p></BlurFade>
       <BlurFade delay={0.4}>
         <div className="mt-8 flex gap-6">
           {([["erode", HeartOff, "text-red-400"], ["depends", Scale, "text-yellow-400"], ["support", HeartHandshake, "text-green-400"]] as const).map(([k, Icon, color]) => (
             <div key={k} className="flex flex-col items-center gap-1">
               <Icon className={`h-5 w-5 ${color}`} />
               <span className={`text-2xl font-black ${color}`}><NumberTicker value={totals[k]} /></span>
-              <span className="text-xs text-zinc-500">{k}</span>
+              <span className="text-xs text-[#8B7FA8]">{k}</span>
             </div>
           ))}
         </div>
@@ -698,11 +698,11 @@ function SummaryView({ room, onReset }: { room: Room; onReset: () => void }) {
         </BlurFade>
       )}
       <div className="mt-8 flex gap-3">
-        <button onClick={handleExport} className="flex items-center gap-2 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-300 hover:border-zinc-500">
+        <button onClick={handleExport} className="flex items-center gap-2 rounded-full border border-[#C9BDD8] px-5 py-3 text-sm font-semibold text-[#3F2F6A] hover:border-[#8B7FA8]">
           {copied ? <Check className="h-4 w-4 text-green-400" /> : <Download className="h-4 w-4" />}
           {copied ? "Copied!" : "Export Results"}
         </button>
-        <button onClick={onReset} className="flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500">
+        <button onClick={onReset} className="flex items-center gap-2 rounded-full bg-[#1A1033] px-6 py-3 text-sm font-bold text-white hover:bg-[#FF3366]">
           <RotateCcw className="h-4 w-4" /> Play Again
         </button>
       </div>

@@ -61,8 +61,8 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
 
   if (!room) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-[#09090b]">
-        <p className="text-zinc-500">Connecting to room {code}...</p>
+      <div className="flex min-h-dvh items-center justify-center bg-[#FAF4E8]">
+        <p className="text-[#8B7FA8]">Connecting to room {code}...</p>
       </div>
     );
   }
@@ -83,24 +83,24 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
   const showBoard = room.phase === "reveal" || room.phase === "reflect";
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-[#09090b] text-zinc-50">
+    <div className="relative flex min-h-dvh flex-col bg-[#FAF4E8] text-[#1A1033]">
       {room.isPaused && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
-            <Pause className="h-16 w-16 text-violet-400" />
-            <p className="text-4xl font-black text-zinc-200">Game Paused</p>
+            <Pause className="h-16 w-16 text-[#FF6699]" />
+            <p className="text-4xl font-black text-[#2D1F4F]">Game Paused</p>
           </div>
         </div>
       )}
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-zinc-800/50 px-8 py-4">
+      <div className="flex items-center justify-between border-b border-[#E8DCC0]/50 px-8 py-4">
         <div className="flex items-center gap-4">
-          <h1 className="bg-gradient-to-r from-zinc-50 to-violet-400 bg-clip-text text-xl font-black text-transparent">The AI Effect</h1>
-          <span className="text-sm font-bold tracking-widest text-violet-400">{room.code}</span>
+          <h1 className="bg-gradient-to-r from-[#1A1033] to-[#FF6699] bg-clip-text text-xl font-black text-transparent">The AI Effect</h1>
+          <span className="text-sm font-bold tracking-widest text-[#FF6699]">{room.code}</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-zinc-500"><Users className="h-4 w-4" /> {playerCount} players</div>
-          <div className="flex items-center gap-2 text-sm text-zinc-500"><Layers className="h-4 w-4" /> Round {room.currentRound} of {room.totalRounds}</div>
+          <div className="flex items-center gap-2 text-sm text-[#8B7FA8]"><Users className="h-4 w-4" /> {playerCount} players</div>
+          <div className="flex items-center gap-2 text-sm text-[#8B7FA8]"><Layers className="h-4 w-4" /> Round {room.currentRound} of {room.totalRounds}</div>
           <BoardTimer room={room} />
         </div>
       </div>
@@ -123,9 +123,9 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
         {room.phase === "lobby" && (
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
-              <p className="text-2xl font-bold text-zinc-400">Waiting for players to join...</p>
-              <p className="mt-2 text-6xl font-black tracking-widest text-violet-400">{room.code}</p>
-              <p className="mt-4 text-lg text-zinc-500">{playerCount} player{playerCount !== 1 ? "s" : ""} connected</p>
+              <p className="text-2xl font-bold text-[#6B5F87]">Waiting for players to join...</p>
+              <p className="mt-2 text-6xl font-black tracking-widest text-[#FF6699]">{room.code}</p>
+              <p className="mt-4 text-lg text-[#8B7FA8]">{playerCount} player{playerCount !== 1 ? "s" : ""} connected</p>
             </div>
           </div>
         )}
@@ -133,7 +133,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
         {/* DRAW */}
         {room.phase === "draw" && (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-lg text-zinc-500">Read the scenario above...</p>
+            <p className="text-lg text-[#8B7FA8]">Read the scenario above...</p>
           </div>
         )}
 
@@ -141,7 +141,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
         {room.phase === "vote" && (
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
-              <p className="text-2xl font-bold text-zinc-300">Voting in progress...</p>
+              <p className="text-2xl font-bold text-[#3F2F6A]">Voting in progress...</p>
               <div className="mt-4 flex justify-center gap-8">
                 {cols.map((c) => (
                   <div key={c.vote} className={`flex items-center gap-2 text-lg ${c.color}`}>
@@ -149,7 +149,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
                   </div>
                 ))}
               </div>
-              <p className="mt-6 text-4xl font-black text-zinc-50">{Object.keys(room.votes).length} <span className="text-lg font-normal text-zinc-500">of {playerCount} voted</span></p>
+              <p className="mt-6 text-4xl font-black text-[#1A1033]">{Object.keys(room.votes).length} <span className="text-lg font-normal text-[#8B7FA8]">of {playerCount} voted</span></p>
             </div>
           </div>
         )}
@@ -158,8 +158,8 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
         {room.phase === "reason" && (
           <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
-              <p className="text-2xl font-bold text-zinc-300">Sharing reasons...</p>
-              <p className="mt-4 text-4xl font-black text-zinc-50">{Object.keys(room.reasons).length} <span className="text-lg font-normal text-zinc-500">of {playerCount} submitted</span></p>
+              <p className="text-2xl font-bold text-[#3F2F6A]">Sharing reasons...</p>
+              <p className="mt-4 text-4xl font-black text-[#1A1033]">{Object.keys(room.reasons).length} <span className="text-lg font-normal text-[#8B7FA8]">of {playerCount} submitted</span></p>
             </div>
           </div>
         )}
@@ -186,7 +186,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
                 {cols.map((c) => (
                   <div key={c.vote} className={`flex items-center justify-center gap-2 text-lg font-bold ${c.color}`}>
                     <c.icon className="h-5 w-5" /> {c.label}
-                    <span className="ml-1 rounded-full bg-zinc-800 px-2.5 py-0.5 text-sm">{grouped[c.vote].length}</span>
+                    <span className="ml-1 rounded-full bg-[#E8DCC0] px-2.5 py-0.5 text-sm">{grouped[c.vote].length}</span>
                   </div>
                 ))}
               </div>
@@ -205,7 +205,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
                           </BlurFade>
                         ))}
                         {grouped[c.vote].length > 5 && (
-                          <p className="text-center text-xs text-zinc-600">+{grouped[c.vote].length - 5} more</p>
+                          <p className="text-center text-xs text-[#A89CC0]">+{grouped[c.vote].length - 5} more</p>
                         )}
                       </>
                     ) : (
@@ -217,7 +217,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
                       ))
                     )}
                     {grouped[c.vote].length === 0 && (
-                      <div className="rounded-xl border border-dashed border-zinc-800 p-6 text-center text-sm text-zinc-600">No votes</div>
+                      <div className="rounded-xl border border-dashed border-[#E8DCC0] p-6 text-center text-sm text-[#A89CC0]">No votes</div>
                     )}
                   </div>
                 ))}
@@ -225,7 +225,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
 
               {room.phase === "reflect" && (
                 <div className="mt-4 text-center">
-                  <p className="animate-pulse text-sm font-semibold text-violet-400">Players can change their vote now...</p>
+                  <p className="animate-pulse text-sm font-semibold text-[#FF6699]">Players can change their vote now...</p>
                 </div>
               )}
             </motion.div>
@@ -237,7 +237,7 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
           <div className="flex flex-1 flex-col items-center justify-center">
             <Confetti />
             <h2 className="text-4xl font-black">Game Complete!</h2>
-            <p className="mt-2 text-zinc-500">{room.roundHistory.length} rounds played</p>
+            <p className="mt-2 text-[#8B7FA8]">{room.roundHistory.length} rounds played</p>
             <SummaryStats rounds={room.roundHistory} />
           </div>
         )}
@@ -249,10 +249,10 @@ export default function BoardPage({ params }: { params: Promise<{ code: string }
 function ReasonCard({ card, col }: { card: { id: string; text: string; name: string }; col: typeof cols[number] }) {
   return (
     <div className={`rounded-xl border-l-4 ${col.bl} ${col.bg} p-4`}>
-      <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
+      <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#8B7FA8]">
         <User className="h-3 w-3" /> {card.name}
       </div>
-      {card.text && <p className="text-sm leading-relaxed text-zinc-300">{card.text}</p>}
+      {card.text && <p className="text-sm leading-relaxed text-[#3F2F6A]">{card.text}</p>}
     </div>
   );
 }
@@ -275,7 +275,7 @@ function WordCloud({ reasons, color }: { reasons: string[]; color: string }) {
 
   const maxCount = topWords[0][1];
   return (
-    <div className="flex flex-wrap justify-center gap-2 rounded-xl border border-zinc-800/50 bg-zinc-900/50 p-4">
+    <div className="flex flex-wrap justify-center gap-2 rounded-xl border border-[#E8DCC0]/50 bg-[#F5EAD4]/50 p-4">
       {topWords.map(([word, count]) => {
         const scale = 0.7 + (count / maxCount) * 0.6;
         return (
@@ -307,7 +307,7 @@ function BoardTimer({ room }: { room: Room }) {
     const pMins = Math.floor(room.pausedTimeLeft / 60);
     const pSecs = room.pausedTimeLeft % 60;
     return (
-      <div className="flex items-center gap-2 rounded-full border border-zinc-700 px-4 py-2 text-lg font-black tabular-nums text-zinc-500">
+      <div className="flex items-center gap-2 rounded-full border border-[#C9BDD8] px-4 py-2 text-lg font-black tabular-nums text-[#8B7FA8]">
         <Pause className="h-4 w-4" />
         {pMins}:{pSecs.toString().padStart(2, "0")}
       </div>
@@ -321,7 +321,7 @@ function BoardTimer({ room }: { room: Room }) {
 
   return (
     <div className={`flex items-center gap-2 rounded-full border px-4 py-2 text-lg font-black tabular-nums ${
-      isExpired ? "border-red-500/50 bg-red-500/10 text-red-400 animate-pulse" : "border-violet-500/30 bg-violet-500/10 text-zinc-50"
+      isExpired ? "border-red-500/50 bg-red-500/10 text-red-400 animate-pulse" : "border-[#FF3366]/30 bg-[#FF3366]/10 text-[#1A1033]"
     }`}>
       <Timer className="h-4 w-4" />
       {isExpired ? "Time's up!" : `${mins}:${secs.toString().padStart(2, "0")}`}
@@ -341,7 +341,7 @@ function SummaryStats({ rounds }: { rounds: Room["roundHistory"] }) {
           <div key={c.vote} className="flex flex-col items-center gap-1">
             <c.icon className={`h-6 w-6 ${c.color}`} />
             <span className={`text-3xl font-black ${c.color}`}>{totals[c.vote]}</span>
-            <span className="text-xs text-zinc-500">{c.label}</span>
+            <span className="text-xs text-[#8B7FA8]">{c.label}</span>
           </div>
         ))}
       </div>
