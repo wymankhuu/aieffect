@@ -44,6 +44,7 @@ export type Room = {
     revisedVotes: Record<string, Vote>;
   }[];
   version: number;
+  dbSessionId: string | null;
 };
 
 function key(code: string) {
@@ -106,6 +107,7 @@ export async function createRoomIfAbsent(code: string, facilitator: Player, tota
     revisedVotes: {},
     roundHistory: [],
     version: 1,
+    dbSessionId: null,
   };
   const result = await redis.set(key(code), room, { nx: true, ex: ROOM_TTL });
   return result === "OK" ? room : null;
