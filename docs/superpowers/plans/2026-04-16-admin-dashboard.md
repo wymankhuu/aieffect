@@ -6,7 +6,9 @@
 
 **Architecture:** Live game state stays in Upstash Redis (source of truth). After each round completes, `act()` in `game-store.ts` calls `archiveRound()` which writes to Vercel Postgres (Neon). The `/admin/*` tree reads from Postgres and is guarded by an HMAC-signed cookie set after password auth.
 
-**Tech Stack:** Next.js 16.2.3 (modified — see `AGENTS.md`), React 19, TypeScript, Upstash Redis (existing), Neon Postgres (new, via `@neondatabase/serverless`), Vitest (new, for unit tests of pure helpers).
+**Tech Stack:** Next.js 16.2.3 (modified — see `AGENTS.md`), React 19, TypeScript, Upstash Redis (existing), Postgres (Neon in production, vanilla in dev) via the `pg` driver, Vitest (new, for unit tests of pure helpers).
+
+> **Note (2026-04-16):** The original spec called for `@neondatabase/serverless`, but its `neon()` function is HTTP-only (Neon's `/sql` endpoint) and cannot talk to a vanilla local Postgres. Switched to the standard `pg` driver, which speaks the wire protocol against any Postgres (Neon included) and runs fine in Vercel Node Functions. `db.ts` exports a tagged-template `sql` wrapper that keeps the call-site syntax (`` await sql`SELECT … ${id}` ``) identical to what `@neondatabase/serverless` provided, so tasks 6, 10, 11, 12 are unaffected at the query sites.
 
 **Spec:** `docs/superpowers/specs/2026-04-16-admin-dashboard-design.md`
 
@@ -75,22 +77,22 @@ git commit -m "Document env vars for admin dashboard"
 **Files:**
 - Modify: `package.json`, `package-lock.json`
 
-- [ ] **Step 1: Install Neon driver**
+- [ ] **Step 1: Install Postgres driver**
 
 ```bash
 cd /Users/wymankhuu/Desktop/Projects/the-ai-effect
-npm install @neondatabase/serverless
+npm install pg
 ```
 
-Expected: `package.json` now contains `"@neondatabase/serverless"` under `dependencies`.
+Expected: `package.json` now contains `"pg"` under `dependencies`.
 
-- [ ] **Step 2: Install Vitest and tsx as devDependencies**
+- [ ] **Step 2: Install Vitest, tsx, and pg types as devDependencies**
 
 ```bash
-npm install -D vitest tsx
+npm install -D vitest tsx @types/pg
 ```
 
-`tsx` is for running the migration script; `vitest` is for unit tests of pure helpers.
+`tsx` runs the migration script; `vitest` is for unit tests of pure helpers; `@types/pg` provides TypeScript types for the Postgres driver.
 
 - [ ] **Step 3: Add scripts to package.json**
 
@@ -106,7 +108,7 @@ In the `scripts` block of `package.json`, add:
 
 ```bash
 git add package.json package-lock.json
-git commit -m "Add Neon driver, Vitest, and tsx for admin dashboard"
+git commit -m "Add pg driver, Vitest, and tsx for admin dashboard"
 ```
 
 ---
@@ -163,17 +165,18 @@ CREATE INDEX IF NOT EXISTS responses_recorded_at_idx   ON responses (recorded_at
 Create `/Users/wymankhuu/Desktop/Projects/the-ai-effect/scripts/migrate.ts`:
 
 ```ts
-import { neon } from "@neondatabase/serverless";
+import { Client } from "pg";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    console.error("DATABASE_URL not set. Run `vercel env pull .env.local` first.");
+    console.error("DATABASE_URL not set. For prod, run `vercel env pull .env.local` first; for local dev, ensure your local Postgres URL is in .env.local.");
     process.exit(1);
   }
-  const sql = neon(url);
+  const client = new Client({ connectionString: url });
+  await client.connect();
 
   const dir = join(process.cwd(), "migrations");
   const files = (await readdir(dir)).filter((f) => f.endsWith(".sql")).sort();
@@ -181,11 +184,11 @@ async function main() {
   for (const file of files) {
     console.log(`Applying ${file}...`);
     const text = await readFile(join(dir, file), "utf8");
-    // Neon's `sql` template supports multi-statement queries via `sql.transaction`
-    // or we can split on `;` — simplest is to execute the whole file as one query.
-    await sql.query(text);
+    // pg's Client.query handles multi-statement SQL natively when no params are passed.
+    await client.query(text);
     console.log(`  ok`);
   }
+  await client.end();
   console.log("Done.");
 }
 
@@ -211,11 +214,13 @@ Done.
 
 - [ ] **Step 4: Verify tables exist**
 
-Run a quick check using the Neon dashboard SQL editor, or:
+For local dev (docker postgres on port 5434):
 
 ```bash
-node -e "const {neon}=require('@neondatabase/serverless');const sql=neon(process.env.DATABASE_URL);sql\`select table_name from information_schema.tables where table_schema='public' order by table_name\`.then(r=>console.log(r)).catch(console.error)"
+docker exec aieffect-postgres psql -U postgres -d aieffect -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name;"
 ```
+
+For prod (Neon), use the Neon dashboard SQL editor or `psql "$DATABASE_URL" -c "..."`.
 
 Expected: output contains `sessions` and `responses`.
 
@@ -238,7 +243,7 @@ git commit -m "Add Postgres schema and migration runner for admin dashboard"
 Create `/Users/wymankhuu/Desktop/Projects/the-ai-effect/src/lib/db.ts`:
 
 ```ts
-import { neon } from "@neondatabase/serverless";
+import { Pool, type QueryResultRow } from "pg";
 
 if (!process.env.DATABASE_URL) {
   // Don't throw at module load — route handlers can still start up and report
@@ -246,7 +251,62 @@ if (!process.env.DATABASE_URL) {
   console.warn("DATABASE_URL is not set — Postgres features will fail.");
 }
 
-export const sql = neon(process.env.DATABASE_URL ?? "");
+// Cache the pool across hot reloads in dev and across function invocations on
+// Vercel (per-instance). One pool per Node process.
+declare global {
+  // eslint-disable-next-line no-var
+  var __pgPool: Pool | undefined;
+}
+const pool: Pool =
+  globalThis.__pgPool ??
+  (globalThis.__pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL ?? "",
+  }));
+
+/**
+ * Tagged-template SQL helper. Supports:
+ *
+ *   await sql`SELECT * FROM sessions WHERE id = ${id}`
+ *
+ * Interpolated values are sent as bind parameters ($1, $2, …), not concatenated
+ * into the SQL string — safe against injection. Returns rows directly (matches
+ * the API of `@neondatabase/serverless`'s `neon()` so call sites stay simple).
+ *
+ * For raw multi-statement SQL (migrations), use `sql.query(text)`.
+ */
+type SqlFn = {
+  <T extends QueryResultRow = QueryResultRow>(
+    strings: TemplateStringsArray,
+    ...values: unknown[]
+  ): Promise<T[]>;
+  query<T extends QueryResultRow = QueryResultRow>(
+    text: string,
+    params?: unknown[],
+  ): Promise<T[]>;
+};
+
+const sqlFn: SqlFn = (async <T extends QueryResultRow = QueryResultRow>(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Promise<T[]> => {
+  let text = "";
+  for (let i = 0; i < strings.length; i++) {
+    text += strings[i];
+    if (i < values.length) text += `$${i + 1}`;
+  }
+  const result = await pool.query<T>(text, values);
+  return result.rows;
+}) as SqlFn;
+
+sqlFn.query = async <T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[],
+): Promise<T[]> => {
+  const result = await pool.query<T>(text, params);
+  return result.rows;
+};
+
+export const sql = sqlFn;
 
 export type SessionRow = {
   id: string;
@@ -278,7 +338,7 @@ export type ResponseRow = {
 
 ```bash
 git add src/lib/db.ts
-git commit -m "Add Neon Postgres client helper"
+git commit -m "Add Postgres client helper with tagged-template sql"
 ```
 
 ---
@@ -1105,9 +1165,8 @@ type Stats = {
 };
 
 async function loadStats(fromIso: string | null, toIso: string | null): Promise<Stats> {
-  // Normalise once and use plain parameters in each query. Avoid sub-template
-  // composition — the neon HTTP driver's template tag doesn't support nesting
-  // `sql\`...\`` fragments in a portable way.
+  // Normalise once and use plain parameters in each query. Keep the call sites
+  // simple — no sub-template composition — so the SQL stays easy to read.
   const fromParam = fromIso ?? "1970-01-01";
   const toParam   = toIso   ?? "9999-01-01";
 
