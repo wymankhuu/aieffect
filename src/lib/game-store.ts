@@ -2,6 +2,7 @@
 
 import { Redis } from "@upstash/redis";
 import scenarios from "@/data/scenarios.json";
+import { archiveRound, markSessionComplete } from "./archive";
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -228,12 +229,24 @@ export async function act(
       }
       case "next-round": {
         if (!player.isFacilitator) return "Not facilitator";
-        room.roundHistory.push({
+        const snapshot = {
           cardIndex: room.currentCardIndex!,
           votes: { ...room.votes },
           reasons: { ...room.reasons },
           revisedVotes: { ...room.revisedVotes },
-        });
+        };
+        room.roundHistory.push(snapshot);
+        // Persist dbSessionId to Redis as soon as it's allocated, to minimise the
+        // window where a crash could create an orphan session row on retry.
+        const hadDbSessionBefore = room.dbSessionId !== null;
+        try {
+          await archiveRound(room, snapshot);
+          if (!hadDbSessionBefore && room.dbSessionId) {
+            await saveRoom(room);
+          }
+        } catch (err) {
+          console.error("archiveRound failed", err);
+        }
         room.votes = {};
         room.reasons = {};
         room.revisedVotes = {};
@@ -241,6 +254,11 @@ export async function act(
 
         if (room.currentRound >= room.totalRounds) {
           room.phase = "summary";
+          try {
+            await markSessionComplete(room);
+          } catch (err) {
+            console.error("markSessionComplete failed", err);
+          }
           break;
         }
         room.currentRound++;
@@ -251,18 +269,33 @@ export async function act(
       case "end-game": {
         if (!player.isFacilitator) return "Not facilitator";
         if (room.currentCardIndex !== null && Object.keys(room.votes).length > 0) {
-          room.roundHistory.push({
+          const snapshot = {
             cardIndex: room.currentCardIndex,
             votes: { ...room.votes },
             reasons: { ...room.reasons },
             revisedVotes: { ...room.revisedVotes },
-          });
+          };
+          room.roundHistory.push(snapshot);
+          const hadDbSessionBefore = room.dbSessionId !== null;
+          try {
+            await archiveRound(room, snapshot);
+            if (!hadDbSessionBefore && room.dbSessionId) {
+              await saveRoom(room);
+            }
+          } catch (err) {
+            console.error("archiveRound failed", err);
+          }
         }
         room.votes = {};
         room.reasons = {};
         room.revisedVotes = {};
         room.timerStartedAt = null;
         room.phase = "summary";
+        try {
+          await markSessionComplete(room);
+        } catch (err) {
+          console.error("markSessionComplete failed", err);
+        }
         break;
       }
       case "pause": {
