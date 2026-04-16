@@ -245,7 +245,7 @@ export async function act(
             await saveRoom(room);
           }
         } catch (err) {
-          console.error("archiveRound failed", err);
+          console.error("archiveRound failed", { code: room.code, round: room.currentRound, err });
         }
         room.votes = {};
         room.reasons = {};
@@ -257,7 +257,7 @@ export async function act(
           try {
             await markSessionComplete(room);
           } catch (err) {
-            console.error("markSessionComplete failed", err);
+            console.error("markSessionComplete failed", { code: room.code, err });
           }
           break;
         }
@@ -283,7 +283,7 @@ export async function act(
               await saveRoom(room);
             }
           } catch (err) {
-            console.error("archiveRound failed", err);
+            console.error("archiveRound failed", { code: room.code, round: room.currentRound, err });
           }
         }
         room.votes = {};
@@ -294,7 +294,7 @@ export async function act(
         try {
           await markSessionComplete(room);
         } catch (err) {
-          console.error("markSessionComplete failed", err);
+          console.error("markSessionComplete failed", { code: room.code, err });
         }
         break;
       }
