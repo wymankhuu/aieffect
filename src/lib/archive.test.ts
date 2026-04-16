@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { archiveRound, markSessionComplete, type RoundSnapshot } from "./archive";
 import { sql } from "./db";
+import scenarios from "@/data/scenarios.json";
 import type { Room } from "./game-store";
 
 function makeRoom(overrides: Partial<Room> = {}): Room {
@@ -45,11 +46,6 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await sql.query("TRUNCATE responses, sessions RESTART IDENTITY CASCADE");
-});
-
-afterAll(async () => {
-  // Best-effort pool cleanup so vitest exits cleanly
-  await sql.query("SELECT 1");
 });
 
 describe("archiveRound", () => {
@@ -121,7 +117,7 @@ describe("archiveRound", () => {
     const responses = await sql.query<{ scenario_text: string }>(
       "SELECT DISTINCT scenario_text FROM responses"
     );
-    expect(responses[0].scenario_text).toMatch(/family group chat/); // scenarios[0].text snippet
+    expect(responses[0].scenario_text).toBe((scenarios[0] as { text: string }).text);
   });
 });
 
@@ -132,15 +128,15 @@ describe("markSessionComplete", () => {
     await archiveRound(room, round1);
 
     await markSessionComplete(room);
-    const first = await sql.query<{ completed_at: string }>("SELECT completed_at FROM sessions");
+    const first = await sql.query<{ completed_at: Date }>("SELECT completed_at FROM sessions");
     expect(first[0].completed_at).not.toBeNull();
-    const firstStamp = String(first[0].completed_at);
+    const firstMs = first[0].completed_at.getTime();
 
-    // Second call should NOT change completed_at (idempotent)
+    // Second call should NOT change completed_at (idempotent — guarded by IS NULL).
     await new Promise((r) => setTimeout(r, 10));
     await markSessionComplete(room);
-    const second = await sql.query<{ completed_at: string }>("SELECT completed_at FROM sessions");
-    expect(String(second[0].completed_at)).toBe(firstStamp);
+    const second = await sql.query<{ completed_at: Date }>("SELECT completed_at FROM sessions");
+    expect(second[0].completed_at.getTime()).toBe(firstMs);
   });
 
   it("is a no-op if room has no dbSessionId", async () => {

@@ -12,7 +12,15 @@ export type RoundSnapshot = {
 /**
  * Writes a completed round to Postgres. On first call for a room, also inserts
  * a `sessions` row and mutates `room.dbSessionId` so the caller must persist
- * the room afterwards. Idempotent under retry via the unique constraint.
+ * the room afterwards.
+ *
+ * Idempotency: per-session via the unique (session_id, round_number, player_id)
+ * constraint — retrying the same snapshot under the same dbSessionId is safe.
+ * NOT idempotent across the gap between the session insert and the caller's
+ * `saveRoom`: if the process dies after the session row commits but before
+ * dbSessionId is persisted to Redis, a retry will create a new (empty) session
+ * row. To minimise that window, callers should persist the room as soon as
+ * dbSessionId transitions from null to a UUID.
  */
 export async function archiveRound(room: Room, snapshot: RoundSnapshot): Promise<void> {
   if (!room.dbSessionId) {
