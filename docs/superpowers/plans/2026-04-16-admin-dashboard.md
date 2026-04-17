@@ -1504,7 +1504,7 @@ export default async function SessionDetailPage({ params }: { params: Params }) 
           </div>
         </div>
         <a
-          href={`/api/admin/sessions/${id}/export.csv`}
+          href={`/api/admin/sessions/${id}/export`}
           className="rounded border border-[#1A1033] px-3 py-1 text-sm text-[#1A1033] hover:bg-[#1A1033] hover:text-white"
         >
           Download this session (CSV)
