@@ -5,8 +5,8 @@ const PAGE_SIZE = 50;
 
 export async function SessionsTable({ page, from, to }: { page: number; from: string | null; to: string | null }) {
   const offset = (page - 1) * PAGE_SIZE;
-  const fromParam = from ?? "1970-01-01";
-  const toParam   = to   ?? "9999-01-01";
+  const fromParam = from || "1970-01-01";
+  const toParam   = to   || "9999-01-01";
 
   const rows = (await sql`
     SELECT id, room_code, created_at, completed_at, total_rounds, rounds_completed, facilitator_name, player_count

@@ -15,8 +15,8 @@ type Stats = {
 async function loadStats(fromIso: string | null, toIso: string | null): Promise<Stats> {
   // Normalise once and use plain parameters in each query. Keep the call sites
   // simple — no sub-template composition — so the SQL stays easy to read.
-  const fromParam = fromIso ?? "1970-01-01";
-  const toParam   = toIso   ?? "9999-01-01";
+  const fromParam = fromIso || "1970-01-01";
+  const toParam   = toIso   || "9999-01-01";
 
   const [totals] = (await sql`
     SELECT

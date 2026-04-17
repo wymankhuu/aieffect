@@ -31,8 +31,8 @@ export async function GET(req: Request) {
       r.revised_vote  AS revised_vote
     FROM responses r
     JOIN sessions s ON s.id = r.session_id
-    WHERE r.recorded_at >= ${from ?? "1970-01-01"}
-      AND r.recorded_at <  ${to   ?? "9999-01-01"}
+    WHERE r.recorded_at >= ${from || "1970-01-01"}
+      AND r.recorded_at <  ${to   || "9999-01-01"}
     ORDER BY r.recorded_at ASC
   `) as unknown as {
     session_id: string; room_code: string; session_date: string;

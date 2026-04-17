@@ -6,8 +6,9 @@ type SearchParams = Promise<{ page?: string; from?: string; to?: string }>;
 export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? 1));
-  const from = params.from ?? null;
-  const to = params.to ?? null;
+  // Treat empty strings (from blank inputs) as null, not as a value.
+  const from = params.from || null;
+  const to = params.to || null;
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
