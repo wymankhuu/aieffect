@@ -1321,7 +1321,7 @@ export async function SessionsTable({ page, from, to }: { page: number; from: st
       <div className="flex items-center justify-between border-b border-[#6B5F87]/20 px-4 py-3">
         <h2 className="font-serif text-lg">Sessions ({count})</h2>
         <a
-          href={`/api/admin/export/all.csv${from || to ? `?${new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) })}` : ""}`}
+          href={`/api/admin/export/all${from || to ? `?${new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) })}` : ""}`}
           className="rounded border border-[#1A1033] px-3 py-1 text-sm text-[#1A1033] hover:bg-[#1A1033] hover:text-white"
         >
           Download all responses (CSV)
@@ -1350,7 +1350,7 @@ export async function SessionsTable({ page, from, to }: { page: number; from: st
               <td className="px-4 py-2">{r.completed_at ? "✓ complete" : "in progress"}</td>
               <td className="px-4 py-2">
                 <Link href={`/admin/sessions/${r.id}`} className="mr-3 text-[#1A1033] underline">View</Link>
-                <a href={`/api/admin/sessions/${r.id}/export.csv`} className="text-[#1A1033] underline">CSV</a>
+                <a href={`/api/admin/sessions/${r.id}/export`} className="text-[#1A1033] underline">CSV</a>
               </td>
             </tr>
           ))}
